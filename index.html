@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pip's Phonics Forest — Learn to Read with Pip the Fox!</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦊</text></svg>">
+<!-- The only external dependency: a friendly display font + legible body font. Everything else is inline. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   PIP'S PHONICS FOREST — design system
+   One deliberate palette, defined once. Warm forest tones: cream paper,
+   fox orange, leaf greens, sunshine yellow, berry pink, brook blue.
+   ========================================================================= */
+:root{
+  --bg:        #FDF3DF;
+  --bg-deep:   #F6E7C8;
+  --card:      #FFFFFF;
+  --ink:       #46302A;   /* warm near-black: 10.9:1 on cream — high contrast */
+  --ink-soft:  #7A615A;
+  --orange:    #EE8A3C;
+  --orange-dk: #D96F1E;
+  --green:     #4D9B68;
+  --green-dk:  #2F7249;
+  --leaf:      #7FBF6B;
+  --yellow:    #FFC94D;
+  --yellow-dk: #E8A800;
+  --pink:      #EA6E96;
+  --blue:      #62B6D9;
+  --blue-dk:   #3E8FB3;
+  --night:     #33415C;
+  --shadow:    0 6px 0 rgba(70,48,42,.12);
+  --shadow-lg: 0 12px 28px rgba(70,48,42,.18);
+  --r-lg: 28px;
+  --r-md: 20px;
+  --bounce: cubic-bezier(.34,1.56,.64,1);   /* every press feels springy */
+  --soft:   cubic-bezier(.22,.9,.35,1);
+  --font-display:'Fredoka',system-ui,sans-serif;
+  --font-body:'Nunito',system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0; font-family:var(--font-body); color:var(--ink);
+  background:var(--bg); overflow:hidden;
+  -webkit-font-smoothing:antialiased; touch-action:manipulation;
+}
+button{font-family:inherit;color:inherit;border:none;background:none;cursor:pointer}
+/* Clear, chunky focus ring — keyboard players are players too */
+:focus-visible{outline:4px solid var(--blue-dk);outline-offset:3px;border-radius:14px}
+
+/* ---------- screen plumbing: animated transitions between screens ---------- */
+#stage{position:fixed;inset:0;overflow:hidden}
+.screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  opacity:0;visibility:hidden;transform:translateY(26px) scale(.985);
+  transition:opacity .45s var(--soft),transform .45s var(--soft),visibility 0s linear .45s;
+  overflow:hidden;
+}
+.screen.active{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+
+/* ---------- shared bits ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  font-family:var(--font-display);font-weight:600;font-size:1.35rem;
+  padding:18px 40px;border-radius:999px;color:#fff;background:var(--green);
+  box-shadow:0 6px 0 var(--green-dk), var(--shadow-lg);
+  transition:transform .18s var(--bounce),box-shadow .18s var(--bounce),filter .18s;
+  min-height:64px; /* big tap targets for small hands */
+}
+.btn:hover{transform:translateY(-3px) scale(1.03)}
+.btn:active{transform:translateY(3px) scale(.97);box-shadow:0 2px 0 var(--green-dk)}
+.btn.orange{background:var(--orange);box-shadow:0 6px 0 var(--orange-dk),var(--shadow-lg)}
+.btn.orange:active{box-shadow:0 2px 0 var(--orange-dk)}
+.btn.blue{background:var(--blue);box-shadow:0 6px 0 var(--blue-dk),var(--shadow-lg)}
+.btn.blue:active{box-shadow:0 2px 0 var(--blue-dk)}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:0 6px 0 rgba(70,48,42,.15),var(--shadow)}
+.icon-btn{
+  width:58px;height:58px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  background:#fff;box-shadow:0 4px 0 rgba(70,48,42,.14),0 8px 18px rgba(70,48,42,.12);
+  transition:transform .18s var(--bounce);flex:none;
+}
+.icon-btn:hover{transform:scale(1.08) rotate(-4deg)}
+.icon-btn:active{transform:scale(.92)}
+.icon-btn svg{width:30px;height:30px}
+
+/* =========================================================================
+   SKY & SCENERY — every screen sits inside the same living forest world.
+   Layered SVG hills + drifting clouds + floating leaves = gentle idle motion
+   so the screen is never static.
+   ========================================================================= */
+.world{position:absolute;inset:0;z-index:0;pointer-events:none}
+.world .sky{position:absolute;inset:0;background:linear-gradient(#BFE6F2 0%,#E6F4E4 55%,var(--bg) 100%)}
+.world .hills{position:absolute;left:0;right:0;bottom:0;width:100%;height:46%;}
+.world .hills svg{width:100%;height:100%;display:block}
+.cloud{position:absolute;opacity:.9;animation:drift linear infinite}
+.cloud svg{display:block;width:100%;height:auto}
+@keyframes drift{from{transform:translateX(-18vw)}to{transform:translateX(118vw)}}
+.leaf{position:absolute;top:-40px;animation:leafFall linear infinite;opacity:.85}
+@keyframes leafFall{
+  0%{transform:translateY(-5vh) rotate(0deg) translateX(0)}
+  25%{transform:translateY(28vh) rotate(120deg) translateX(4vw)}
+  50%{transform:translateY(55vh) rotate(220deg) translateX(-3vw)}
+  75%{transform:translateY(80vh) rotate(300deg) translateX(3vw)}
+  100%{transform:translateY(110vh) rotate(400deg) translateX(-2vw)}
+}
+.sunburst{position:absolute;top:4vh;right:6vw;width:110px;height:110px;animation:sunSpin 40s linear infinite}
+@keyframes sunSpin{to{transform:rotate(360deg)}}
+
+/* =========================================================================
+   PIP THE FOX — the recurring mascot. Idle breathing + blinking; cheer and
+   shrug states are toggled with classes from JS. He is the emotional anchor.
+   ========================================================================= */
+.fox{display:block;width:100%;height:auto}
+.fox .fx-all{transform-origin:50% 100%;animation:breathe 3.6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scaleY(1) scaleX(1)}50%{transform:scaleY(1.025) scaleX(.995)}}
+.fox .fx-eyes{transform-origin:110px 84px;animation:blink 4.6s infinite}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}95.5%,97.5%{transform:scaleY(.08)}}
+.fox .fx-tail{transform-origin:150px 168px;animation:wag 4.2s ease-in-out infinite}
+@keyframes wag{0%,100%{transform:rotate(0deg)}50%{transform:rotate(7deg)}}
+.fox .fx-arm-l{transform-origin:74px 158px}
+.fox .fx-arm-r{transform-origin:146px 158px}
+.fox .fx-mouth-o,.fox .fx-mouth-hm{opacity:0}
+/* cheer: a happy bounce, arms thrown up, mouth open in a "yay!" */
+.fox.cheer .fx-all{animation:cheerJump .8s var(--bounce) 2}
+@keyframes cheerJump{0%,100%{transform:translateY(0)}35%{transform:translateY(-26px) scaleY(1.05)}65%{transform:translateY(0) scaleY(.94) scaleX(1.05)}}
+.fox.cheer .fx-arm-l{animation:armL .8s var(--bounce) 2}
+.fox.cheer .fx-arm-r{animation:armR .8s var(--bounce) 2}
+@keyframes armL{0%,100%{transform:rotate(0)}40%{transform:rotate(-115deg)}}
+@keyframes armR{0%,100%{transform:rotate(0)}40%{transform:rotate(115deg)}}
+.fox.cheer .fx-mouth-happy{opacity:0}
+.fox.cheer .fx-mouth-o{opacity:1}
+/* shrug: a kind little head-tilt + one paw up — never a frown */
+.fox.shrug .fx-head{animation:tilt 1.4s ease-in-out 1;transform-origin:110px 110px}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-8deg)}}
+.fox.shrug .fx-arm-r{animation:pawUp 1.4s ease-in-out 1}
+@keyframes pawUp{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(95deg)}}
+.fox.shrug .fx-mouth-happy{opacity:0}
+.fox.shrug .fx-mouth-hm{opacity:1}
+
+/* speech bubble that pops in next to Pip */
+.bubble{
+  position:relative;background:#fff;border-radius:22px;padding:14px 20px;
+  font-family:var(--font-display);font-weight:600;font-size:1.15rem;color:var(--ink);
+  box-shadow:var(--shadow);max-width:280px;
+  transform:scale(0);transform-origin:0% 100%;transition:transform .35s var(--bounce);
+}
+.bubble.show{transform:scale(1)}
+.bubble::after{content:"";position:absolute;left:-10px;bottom:16px;border:12px solid transparent;border-right-color:#fff;border-left:0}
+
+/* =========================================================================
+   TITLE SCREEN
+   ========================================================================= */
+#screen-title{align-items:center;justify-content:center;text-align:center}
+.title-card{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px}
+.logo{
+  font-family:var(--font-display);font-weight:700;line-height:.98;
+  font-size:clamp(2.6rem,8vw,4.6rem);color:var(--green-dk);
+  text-shadow:0 4px 0 rgba(255,255,255,.8);
+}
+.logo .accent{color:var(--orange)}
+.tagline{font-size:clamp(1.05rem,3vw,1.4rem);font-weight:700;color:var(--ink-soft);margin:2px 0 10px}
+.title-fox{width:clamp(180px,30vmin,260px);filter:drop-shadow(0 14px 16px rgba(70,48,42,.22))}
+.logo-pop{animation:logoPop .8s var(--bounce) both}
+@keyframes logoPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.wiggle-letter{display:inline-block;animation:letterBob 2.6s ease-in-out infinite}
+@keyframes letterBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.speech-note{font-size:.95rem;color:var(--ink-soft);font-weight:700;margin-top:14px;background:rgba(255,255,255,.7);padding:8px 16px;border-radius:999px}
+
+/* =========================================================================
+   MAP SCREEN — the journey: five stepping-stones on a winding forest path.
+   Mastered stones bloom and earn a golden star.
+   ========================================================================= */
+#screen-map{padding:0}
+.map-top{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px}
+.map-title{font-family:var(--font-display);font-weight:700;font-size:clamp(1.3rem,4vw,1.9rem);color:var(--green-dk);display:flex;align-items:center;gap:10px}
+.map-title .mini-fox{width:44px;height:44px}
+.map-area{position:relative;flex:1;z-index:2;margin:0 auto;width:min(100%,980px);height:100%}
+.map-bg{position:absolute;inset:0;width:100%;height:100%}
+.stone{
+  position:absolute;transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;z-index:3;
+  transition:transform .25s var(--bounce);
+}
+.stone:hover{transform:translate(-50%,-50%) scale(1.07)}
+.stone:active{transform:translate(-50%,-50%) scale(.95)}
+.stone .pad{
+  width:clamp(64px,10vmin,92px);height:clamp(64px,10vmin,92px);border-radius:38% 42% 40% 44%;
+  display:flex;align-items:center;justify-content:center;position:relative;
+  font-family:var(--font-display);font-weight:700;font-size:clamp(1.5rem,4vmin,2.1rem);color:#fff;
+  box-shadow:0 7px 0 rgba(70,48,42,.22),0 14px 22px rgba(70,48,42,.16);
+  transition:box-shadow .3s;
+}
+.stone .label{
+  font-family:var(--font-display);font-weight:600;font-size:clamp(.78rem,2.1vmin,1rem);
+  background:rgba(255,255,255,.92);color:var(--ink);padding:5px 12px;border-radius:999px;box-shadow:var(--shadow);
+  white-space:nowrap;
+}
+.stone.locked .pad{background:#BCB3A4;color:rgba(255,255,255,.95)}
+.stone.locked .label{color:var(--ink-soft)}
+.stone.open .pad{background:var(--green)}
+.stone.open.next .pad{animation:beckon 1.8s ease-in-out infinite}
+@keyframes beckon{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.stone.done .pad{background:var(--blue)}
+.stone.mastered .pad{background:var(--yellow);color:var(--ink);box-shadow:0 7px 0 var(--yellow-dk),0 0 0 8px rgba(255,201,77,.35),0 0 36px rgba(255,201,77,.8)}
+.stone .star-top{position:absolute;top:-20px;right:-12px;width:34px;height:34px;transform:scale(0);transition:transform .5s var(--bounce) .15s}
+.stone.mastered .star-top{transform:scale(1);animation:starTwirl 3s ease-in-out infinite}
+@keyframes starTwirl{0%,100%{transform:scale(1) rotate(-8deg)}50%{transform:scale(1.15) rotate(8deg)}}
+.stone .bloom{position:absolute;bottom:-8px;left:-16px;width:34px;height:34px;transform:scale(0);transition:transform .5s var(--bounce) .3s}
+.stone.mastered .bloom{transform:scale(1)}
+.map-hint{position:relative;z-index:5;text-align:center;padding:10px 16px 18px;font-weight:800;color:var(--ink-soft)}
+.score-chip{
+  font-family:var(--font-display);font-weight:600;font-size:.95rem;background:#fff;border-radius:999px;
+  padding:8px 14px;box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:6px;color:var(--ink);
+}
+
+/* =========================================================================
+   QUESTION SCREEN
+   ========================================================================= */
+#screen-quest{padding:max(10px,env(safe-area-inset-top)) 14px 12px}
+.q-top{position:relative;z-index:6;display:flex;align-items:center;gap:12px;width:min(100%,860px);margin:4px auto 0}
+.meter-wrap{flex:1;display:flex;flex-direction:column;gap:4px}
+.meter-label{display:flex;justify-content:space-between;font-family:var(--font-display);font-weight:600;font-size:.95rem;color:var(--ink)}
+.meter{height:22px;background:rgba(255,255,255,.85);border-radius:999px;box-shadow:inset 0 2px 5px rgba(70,48,42,.15);overflow:hidden;position:relative}
+.meter .fill{
+  height:100%;width:0%;border-radius:999px;
+  background:linear-gradient(90deg,var(--leaf),var(--green));
+  transition:width .8s var(--soft), background .4s;
+  display:flex;align-items:center;justify-content:flex-end;
+}
+.meter .fill.gold{background:linear-gradient(90deg,var(--yellow),var(--orange))}
+.meter .fill .spark{width:14px;height:14px;margin-right:4px;flex:none}
+.dots{display:flex;gap:7px;justify-content:center;margin:10px 0 2px;position:relative;z-index:6}
+.dots .dot{width:13px;height:13px;border-radius:50%;background:rgba(70,48,42,.16);transition:all .3s var(--bounce)}
+.dots .dot.now{background:var(--orange);transform:scale(1.35)}
+.dots .dot.good{background:var(--green)}
+.dots .dot.hint{background:var(--yellow)}
+.q-main{position:relative;z-index:5;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2.4vmin,22px);width:min(100%,860px);margin:0 auto;min-height:0}
+.prompt-card{
+  background:var(--card);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);
+  padding:clamp(12px,2.6vmin,24px) clamp(18px,4vmin,36px);
+  display:flex;align-items:center;gap:clamp(12px,3vmin,26px);
+  max-width:100%;
+  animation:cardIn .5s var(--bounce) both;
+}
+@keyframes cardIn{from{transform:translateY(-18px) scale(.92);opacity:0}to{transform:none;opacity:1}}
+.prompt-visual{width:clamp(74px,13vmin,118px);height:clamp(74px,13vmin,118px);flex:none}
+.prompt-visual svg{width:100%;height:100%}
+.prompt-body{display:flex;flex-direction:column;gap:4px;align-items:flex-start;min-width:0}
+.prompt-text{font-family:var(--font-display);font-weight:600;font-size:clamp(1.05rem,2.8vmin,1.5rem);color:var(--ink)}
+.prompt-big{
+  font-family:var(--font-display);font-weight:700;color:var(--orange-dk);
+  font-size:clamp(2.4rem,7vmin,4rem);line-height:1;letter-spacing:.04em;
+}
+.prompt-big .gap{color:var(--blue-dk);border-bottom:6px dotted var(--blue);padding:0 2px;margin:0 2px}
+.choices{
+  display:grid;gap:clamp(10px,2vmin,18px);width:100%;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  max-width:760px;
+}
+.choice{
+  background:var(--card);border-radius:var(--r-md);box-shadow:0 6px 0 rgba(70,48,42,.13),0 10px 22px rgba(70,48,42,.10);
+  padding:clamp(10px,2vmin,18px);min-height:96px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  font-family:var(--font-display);font-weight:600;font-size:clamp(1.5rem,4.4vmin,2.2rem);color:var(--ink);
+  transition:transform .18s var(--bounce),box-shadow .18s,background .25s;
+  animation:popIn .45s var(--bounce) both;
+}
+.choice:nth-child(2){animation-delay:.06s}.choice:nth-child(3){animation-delay:.12s}.choice:nth-child(4){animation-delay:.18s}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.choice:hover{transform:translateY(-4px) scale(1.03)}
+.choice:active{transform:scale(.94)}
+.choice .c-art{width:clamp(58px,9vmin,86px);height:clamp(58px,9vmin,86px)}
+.choice .c-art svg{width:100%;height:100%}
+.choice.tapped{animation:wiggleTap .4s ease}
+@keyframes wiggleTap{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+.choice.right{background:#E7F6EA;box-shadow:0 6px 0 var(--green-dk),0 0 0 5px var(--green),0 12px 24px rgba(47,114,73,.3);color:var(--green-dk)}
+.choice.right .check-badge{display:flex}
+.choice.dim{opacity:.45;filter:saturate(.6)}
+.choice.shake{animation:gentleShake .5s ease}
+@keyframes gentleShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+.choice[disabled]{cursor:default}
+.choice{position:relative}
+.check-badge{
+  display:none;position:absolute;top:-12px;right:-10px;width:36px;height:36px;border-radius:50%;
+  background:var(--green);align-items:center;justify-content:center;box-shadow:0 3px 0 var(--green-dk);
+  animation:popIn .4s var(--bounce)
+}
+.hl{color:var(--pink);border-bottom:5px solid var(--pink);border-radius:2px;animation:hlPulse 1s ease-in-out infinite}
+@keyframes hlPulse{0%,100%{opacity:1}50%{opacity:.55}}
+.q-bottom{position:relative;z-index:6;display:flex;align-items:flex-end;gap:10px;width:min(100%,860px);margin:6px auto 0;min-height:118px}
+.q-fox{width:clamp(96px,15vmin,140px);flex:none;filter:drop-shadow(0 8px 8px rgba(70,48,42,.2))}
+
+/* =========================================================================
+   CELEBRATION SCREEN
+   ========================================================================= */
+#screen-party{align-items:center;justify-content:center;text-align:center}
+.party-card{
+  position:relative;z-index:3;background:rgba(255,255,255,.94);border-radius:36px;box-shadow:var(--shadow-lg);
+  padding:clamp(22px,4vmin,44px) clamp(26px,6vmin,60px);display:flex;flex-direction:column;align-items:center;gap:10px;
+  margin:16px;max-width:560px;animation:cardIn .55s var(--bounce) both;
+}
+.party-title{font-family:var(--font-display);font-weight:700;font-size:clamp(1.9rem,6vmin,3rem);color:var(--green-dk)}
+.party-sub{font-weight:800;color:var(--ink-soft);font-size:clamp(1rem,3vmin,1.25rem)}
+.party-fox{width:clamp(140px,22vmin,200px)}
+.big-stars{display:flex;gap:8px;height:64px;align-items:center}
+.big-stars svg{width:56px;height:56px;transform:scale(0)}
+.big-stars svg.lit{animation:starLand .6s var(--bounce) forwards}
+.big-stars svg:nth-child(2).lit{animation-delay:.25s}
+.big-stars svg:nth-child(3).lit{animation-delay:.5s}
+@keyframes starLand{from{transform:scale(0) rotate(-120deg)}to{transform:scale(1) rotate(0)}}
+.party-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.mastery-banner{
+  font-family:var(--font-display);font-weight:700;color:var(--ink);background:linear-gradient(90deg,var(--yellow),#FFE08A);
+  border-radius:999px;padding:10px 22px;box-shadow:0 4px 0 var(--yellow-dk);display:none;align-items:center;gap:8px;
+}
+.mastery-banner.show{display:inline-flex;animation:popIn .5s var(--bounce)}
+
+/* =========================================================================
+   PARENT / TEACHER DASHBOARD — out of the kid flow, one toggle away.
+   ========================================================================= */
+.grown-btn{
+  position:relative;z-index:7;font-weight:800;font-size:.85rem;color:var(--ink-soft);
+  background:rgba(255,255,255,.85);padding:9px 14px;border-radius:999px;box-shadow:var(--shadow);
+  display:inline-flex;gap:6px;align-items:center;flex:none;
+}
+#dash{
+  position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  background:rgba(70,48,42,.45);opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s linear .3s;
+}
+#dash.open{opacity:1;visibility:visible;transition-delay:0s}
+.dash-card{
+  background:#fff;border-radius:28px;box-shadow:var(--shadow-lg);width:min(94vw,640px);max-height:88vh;overflow:auto;
+  padding:26px 28px;transform:translateY(30px) scale(.96);transition:transform .35s var(--bounce);
+}
+#dash.open .dash-card{transform:none}
+.dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.dash-head h2{font-family:var(--font-display);font-weight:700;margin:0;font-size:1.5rem;color:var(--ink)}
+.dash-note{color:var(--ink-soft);font-weight:700;font-size:.92rem;margin:0 0 16px}
+.dash-table{width:100%;border-collapse:collapse;font-size:.98rem}
+.dash-table th{text-align:left;font-family:var(--font-display);font-weight:600;color:var(--ink-soft);padding:8px 10px;border-bottom:2px solid var(--bg-deep);font-size:.85rem;text-transform:uppercase;letter-spacing:.04em}
+.dash-table td{padding:11px 10px;border-bottom:1px solid var(--bg-deep);font-weight:700}
+.dash-table .skill-name{font-family:var(--font-display);font-weight:600;color:var(--ink)}
+.dash-table .skill-eg{display:block;font-size:.8rem;color:var(--ink-soft);font-weight:700}
+.mini-meter{width:90px;height:12px;border-radius:999px;background:var(--bg-deep);overflow:hidden;display:inline-block;vertical-align:middle;margin-right:8px}
+.mini-meter i{display:block;height:100%;background:var(--green);border-radius:999px}
+.tag-mastered{background:#FFF1C9;color:#8a6400;border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:800}
+.tag-todo{background:var(--bg-deep);color:var(--ink-soft);border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:800}
+.dash-foot{margin-top:16px;font-size:.85rem;color:var(--ink-soft);font-weight:700;line-height:1.5}
+
+/* ---------- confetti & star bursts ---------- */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+.confetti{position:absolute;top:-20px;width:12px;height:18px;border-radius:3px;animation:confFall var(--t,2.6s) var(--soft) forwards}
+@keyframes confFall{
+  0%{transform:translateY(-4vh) rotate(0) translateX(0);opacity:1}
+  100%{transform:translateY(108vh) rotate(var(--spin,720deg)) translateX(var(--sway,30px));opacity:.9}
+}
+.burst-star{position:absolute;width:26px;height:26px;animation:burst .8s var(--soft) forwards}
+@keyframes burst{
+  0%{transform:translate(0,0) scale(.3) rotate(0);opacity:1}
+  100%{transform:translate(var(--dx,0),var(--dy,-80px)) scale(1.1) rotate(200deg);opacity:0}
+}
+
+/* speech-unavailable pill */
+#no-voice{
+  position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:70;display:none;
+  background:var(--night);color:#fff;font-weight:800;font-size:.9rem;border-radius:999px;padding:10px 18px;box-shadow:var(--shadow-lg)
+}
+#no-voice.show{display:block;animation:popIn .4s var(--bounce)}
+
+/* visually hidden live region for screen readers */
+.sr-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (max-width:640px){
+  .prompt-card{flex-direction:column;text-align:center;padding:14px 18px}
+  .prompt-body{align-items:center}
+  .choices{grid-template-columns:repeat(2,1fr)}
+  .q-bottom{min-height:96px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+}
+</style>
+</head>
+<body>
+
+<div id="stage">
+
+  <!-- ════════════════ TITLE ════════════════ -->
+  <section class="screen active" id="screen-title">
+    <div class="world" data-world="title"></div>
+    <div class="title-card">
+      <div class="title-fox" id="title-fox"></div>
+      <h1 class="logo logo-pop">Pip&rsquo;s <span class="accent">Phonics</span><br>Forest</h1>
+      <p class="tagline">Sound it out with Pip the Fox!</p>
+      <button class="btn orange" id="btn-start" style="font-size:1.6rem;padding:20px 52px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+        Let&rsquo;s Play!
+      </button>
+      <p class="speech-note" id="speech-note">🔊 Turn your sound on — Pip loves to talk!</p>
+    </div>
+  </section>
+
+  <!-- ════════════════ MAP ════════════════ -->
+  <section class="screen" id="screen-map">
+    <div class="world" data-world="map"></div>
+    <div class="map-top">
+      <div class="map-title"><span class="mini-fox" id="map-fox"></span> Pip&rsquo;s Forest Path</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="icon-btn" id="btn-mute" aria-label="Turn Pip's voice on or off" title="Voice on/off"></button>
+        <button class="grown-btn" id="btn-dash" aria-label="Open the grown-ups dashboard">👋 Grown&#8209;ups</button>
+      </div>
+    </div>
+    <div class="map-area" id="map-area">
+      <svg class="map-bg" viewBox="0 0 800 520" preserveAspectRatio="none" aria-hidden="true">
+        <path id="trail" d="M120,420 C210,420 320,400 312,338 C304,276 220,300 232,232 C244,170 380,210 460,180 C540,152 580,150 650,108"
+              fill="none" stroke="#FFF6E3" stroke-width="26" stroke-linecap="round"/>
+        <path d="M120,420 C210,420 320,400 312,338 C304,276 220,300 232,232 C244,170 380,210 460,180 C540,152 580,150 650,108"
+              fill="none" stroke="#E5CFA3" stroke-width="6" stroke-dasharray="2 18" stroke-linecap="round"/>
+      </svg>
+      <!-- stones injected by JS -->
+    </div>
+    <p class="map-hint" id="map-hint">Tap a stepping&#8209;stone to practice! Earn a ⭐ by reaching 90.</p>
+  </section>
+
+  <!-- ════════════════ QUESTION ════════════════ -->
+  <section class="screen" id="screen-quest">
+    <div class="world" data-world="quest"></div>
+    <div class="q-top">
+      <button class="icon-btn" id="btn-back" aria-label="Back to the map">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#46302A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="meter-wrap">
+        <div class="meter-label"><span id="level-name">Level</span><span><span id="score-num">0</span>/100</span></div>
+        <div class="meter"><div class="fill" id="score-fill"></div></div>
+      </div>
+      <button class="grown-btn" id="btn-dash2" aria-label="Open the grown-ups dashboard">👋</button>
+    </div>
+    <div class="dots" id="dots"></div>
+    <div class="q-main">
+      <div class="prompt-card" id="prompt-card">
+        <div class="prompt-visual" id="prompt-visual"></div>
+        <div class="prompt-body">
+          <div class="prompt-text" id="prompt-text"></div>
+          <div class="prompt-big" id="prompt-big"></div>
+        </div>
+        <button class="icon-btn" id="btn-say" aria-label="Hear it again" title="Hear it again">
+          <svg viewBox="0 0 24 24" fill="#EE8A3C" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16 8.8a4.5 4.5 0 010 6.4M18.6 6a8 8 0 010 12" stroke="#EE8A3C" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      </div>
+      <div class="choices" id="choices"></div>
+    </div>
+    <div class="q-bottom">
+      <div class="q-fox" id="quest-fox"></div>
+      <div class="bubble" id="fox-bubble" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- ════════════════ CELEBRATION ════════════════ -->
+  <section class="screen" id="screen-party">
+    <div class="world" data-world="party"></div>
+    <div class="party-card">
+      <div class="party-fox" id="party-fox"></div>
+      <h2 class="party-title" id="party-title">Hooray!</h2>
+      <div class="big-stars" id="party-stars"></div>
+      <p class="party-sub" id="party-sub"></p>
+      <div class="mastery-banner" id="mastery-banner">⭐ Skill mastered! The forest is blooming!</div>
+      <div class="party-btns">
+        <button class="btn ghost" id="btn-again">Practice again</button>
+        <button class="btn orange" id="btn-map">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/><path d="M9 7v13M15 4v13"/></svg>
+          Back to the path
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- parent / teacher dashboard overlay -->
+<div id="dash" role="dialog" aria-modal="true" aria-labelledby="dash-title">
+  <div class="dash-card">
+    <div class="dash-head">
+      <h2 id="dash-title">Grown-ups&rsquo; corner</h2>
+      <button class="icon-btn" id="btn-dash-close" aria-label="Close dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#46302A" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <p class="dash-note">Skills follow a systematic phonics scope &amp; sequence. A skill is mastered at a score of 90+. Progress lives in this browser tab only.</p>
+    <table class="dash-table" aria-label="Skill progress summary">
+      <thead><tr><th>Skill</th><th>Score</th><th>Tried</th><th>Accuracy</th><th>Status</th></tr></thead>
+      <tbody id="dash-body"></tbody>
+    </table>
+    <p class="dash-foot">💡 <b>Tip:</b> sit alongside your reader and have them say each sound out loud before tapping. Wrong answers are treated as &ldquo;let&rsquo;s listen again&rdquo; moments — there are no penalties, timers, or fail states.</p>
+  </div>
+</div>
+
+<div id="fx" aria-hidden="true"></div>
+<div id="no-voice">🔇 Pip can&rsquo;t talk on this device — follow the pictures and letters!</div>
+<div class="sr-live" id="sr-live" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   PIP'S PHONICS FOREST
+   A single-file, IXL-style adaptive phonics game for early readers (K–2).
+
+   INSTRUCTIONAL DESIGN NOTES
+   --------------------------
+   • Scope & sequence follows systematic synthetic phonics, the order used
+     by most evidence-based curricula: (1) short vowels & CVC words →
+     (2) consonant digraphs → (3) consonant blends → (4) long vowels with
+     silent-e → (5) vowel teams. Each level only uses words decodable with
+     skills taught at or before that level, so the child is never asked to
+     read a pattern they haven't met.
+   • Question types rotate through four recognition/production tasks:
+     listen-and-find, initial/final sound identification, missing-grapheme
+     (sound-to-letter mapping), and rhyme (phonemic awareness).
+   • Audio-first: every prompt is spoken aloud (Web Speech API), because
+     the target player cannot yet read instructions. A replay button is on
+     every question.
+   • Errors are treated as information, not failure: first miss → scaffold
+     (replay the sound + highlight the target grapheme) and a second try;
+     second miss → warm reveal and move on. No timers, no streak-breaking
+     shame, no dead ends.
+   ========================================================================= */
+'use strict';
+
+/* ------------------------------------------------------------------ utils */
+const $  = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+const rint = n => Math.floor(Math.random()*n);
+const pick = arr => arr[rint(arr.length)];
+function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j=rint(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function sampleOther(pool, excludeFn, n){
+  const out = []; const cand = shuffle(pool.filter(w => !excludeFn(w)));
+  for(const w of cand){ if(out.length>=n) break; if(!out.some(o=>o.w===w.w)) out.push(w); }
+  return out;
+}
+const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+
+/* ------------------------------------------------------- speech (audio) */
+/* Thin wrapper over the Web Speech API. Degrades gracefully: if speech is
+   unavailable the game still works visually and shows a one-time notice. */
+const Speech = {
+  ok: ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window),
+  muted: false,
+  warned: false,
+  voice: null,
+  init(){
+    if(!this.ok) return;
+    const load = () => {
+      const vs = speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+      this.voice = vs.find(v=>/child|kids|junior/i.test(v.name)) || vs.find(v=>/female|samantha|zira|google us/i.test(v.name)) || vs[0] || null;
+    };
+    load();
+    if(typeof speechSynthesis.onvoiceschanged !== 'undefined') speechSynthesis.onvoiceschanged = load;
+  },
+  say(text, opts={}){
+    if(this.muted) return;
+    if(!this.ok){ this.flagNoVoice(); return; }
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      if(this.voice) u.voice = this.voice;
+      u.rate  = opts.rate  || 0.88;   // slow & clear for little ears
+      u.pitch = opts.pitch || 1.12;   // bright, friendly
+      speechSynthesis.speak(u);
+    }catch(e){ this.flagNoVoice(); }
+  },
+  flagNoVoice(){
+    if(this.warned) return; this.warned = true;
+    const el = $('#no-voice'); el.classList.add('show');
+    setTimeout(()=>el.classList.remove('show'), 6000);
+  }
+};
+Speech.init();
+
+/* =========================================================================
+   ART LIBRARY — every illustration is hand-drawn inline SVG (no images).
+   Small, friendly, flat shapes with a soft backdrop circle so word-cards
+   read instantly at toddler distance.
+   ========================================================================= */
+function sv(inner, bgc){ return '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="52" r="44" fill="'+(bgc||'#FBF0DA')+'"/>'+inner+'</svg>'; }
+const ART = {
+cat: sv('<circle cx="50" cy="58" r="25" fill="#F2A65A"/><polygon points="29,46 24,18 45,36" fill="#F2A65A"/><polygon points="71,46 76,18 55,36" fill="#F2A65A"/><polygon points="31,40 29,25 41,35" fill="#F8C9A0"/><polygon points="69,40 71,25 59,35" fill="#F8C9A0"/><circle cx="41" cy="55" r="3.2" fill="#46302A"/><circle cx="59" cy="55" r="3.2" fill="#46302A"/><polygon points="46,62 54,62 50,68" fill="#E2725B"/><path d="M50,68 Q46,73 42,71 M50,68 Q54,73 58,71" stroke="#46302A" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M20,58 L34,60 M20,66 L34,63 M80,58 L66,60 M80,66 L66,63" stroke="#46302A" stroke-width="1.6" stroke-linecap="round"/>'),
+dog: sv('<circle cx="50" cy="55" r="25" fill="#C68958"/><ellipse cx="28" cy="50" rx="8" ry="15" fill="#9C6644"/><ellipse cx="72" cy="50" rx="8" ry="15" fill="#9C6644"/><ellipse cx="50" cy="65" rx="13" ry="10" fill="#EBD3B3"/><ellipse cx="50" cy="61" rx="4.5" ry="3.6" fill="#46302A"/><circle cx="41" cy="49" r="3.2" fill="#46302A"/><circle cx="59" cy="49" r="3.2" fill="#46302A"/><path d="M50,65 Q50,70 56,70" stroke="#46302A" stroke-width="1.8" fill="none" stroke-linecap="round"/>'),
+sun: sv('<circle cx="50" cy="52" r="19" fill="#FFC94D" stroke="#E8A800" stroke-width="2"/><g stroke="#FFB300" stroke-width="4" stroke-linecap="round"><path d="M50,22 v-8 M50,82 v8 M20,52 h-8 M80,52 h8 M29,31 l-6,-6 M71,31 l6,-6 M29,73 l-6,6 M71,73 l6,6"/></g><circle cx="44" cy="50" r="2.4" fill="#B97900"/><circle cx="56" cy="50" r="2.4" fill="#B97900"/><path d="M44,58 Q50,62 56,58" stroke="#B97900" stroke-width="2" fill="none" stroke-linecap="round"/>'),
+bug: sv('<ellipse cx="50" cy="58" rx="21" ry="17" fill="#E64A4A"/><path d="M50,41 a13,11 0 0 1 0,0 M37,46 a16,12 0 0 1 26,0 z" fill="#46302A"/><line x1="50" y1="44" x2="50" y2="75" stroke="#46302A" stroke-width="2.4"/><circle cx="42" cy="55" r="3.4" fill="#46302A"/><circle cx="59" cy="60" r="3.4" fill="#46302A"/><circle cx="44" cy="67" r="3" fill="#46302A"/><circle cx="57" cy="50" r="2.6" fill="#46302A"/><path d="M44,40 Q40,30 34,28 M56,40 Q60,30 66,28" stroke="#46302A" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="34" cy="27" r="2.4" fill="#46302A"/><circle cx="66" cy="27" r="2.4" fill="#46302A"/>'),
+hat: sv('<path d="M28,60 Q30,32 50,32 Q70,32 72,60 Z" fill="#E64A4A"/><rect x="18" y="58" width="64" height="9" rx="4.5" fill="#B33030"/><circle cx="50" cy="30" r="5" fill="#FFC94D"/><rect x="28" y="50" width="44" height="7" fill="#FFC94D"/>'),
+pig: sv('<circle cx="50" cy="55" r="25" fill="#F8A8C0"/><polygon points="31,38 28,24 42,32" fill="#F286A8"/><polygon points="69,38 72,24 58,32" fill="#F286A8"/><ellipse cx="50" cy="61" rx="11" ry="8" fill="#F286A8"/><circle cx="46" cy="61" r="2" fill="#B3537A"/><circle cx="54" cy="61" r="2" fill="#B3537A"/><circle cx="40" cy="49" r="3" fill="#46302A"/><circle cx="60" cy="49" r="3" fill="#46302A"/>'),
+cup: sv('<path d="M32,40 h32 v22 q0,10 -16,10 q-16,0 -16,-10 z" fill="#62B6D9"/><path d="M64,45 q14,4 0,16" stroke="#3E8FB3" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M40,32 q2,-5 0,-9 M50,32 q2,-5 0,-9" stroke="#B0A695" stroke-width="2.4" fill="none" stroke-linecap="round"/><rect x="32" y="40" width="32" height="6" fill="#3E8FB3"/>'),
+fox: sv('<circle cx="50" cy="56" r="24" fill="#EE8A3C"/><polygon points="30,44 25,18 46,34" fill="#EE8A3C"/><polygon points="70,44 75,18 54,34" fill="#EE8A3C"/><polygon points="32,39 29,24 41,33" fill="#FFF6E8"/><polygon points="68,39 71,24 59,33" fill="#FFF6E8"/><ellipse cx="42" cy="64" rx="11" ry="9" fill="#FFF6E8"/><ellipse cx="58" cy="64" rx="11" ry="9" fill="#FFF6E8"/><circle cx="41" cy="52" r="3.2" fill="#46302A"/><circle cx="59" cy="52" r="3.2" fill="#46302A"/><ellipse cx="50" cy="62" rx="4.5" ry="3.6" fill="#46302A"/>'),
+box: sv('<rect x="26" y="44" width="48" height="32" rx="3" fill="#C68958"/><polygon points="26,44 38,32 86,32 74,44" fill="#D9A06B" transform="translate(-6,0)"/><rect x="47" y="44" width="6" height="32" fill="#EBD3B3"/><line x1="26" y1="54" x2="74" y2="54" stroke="#9C6644" stroke-width="2"/>'),
+bed: sv('<rect x="20" y="34" width="9" height="38" rx="4" fill="#8A5A3B"/><rect x="20" y="60" width="62" height="9" rx="3" fill="#8A5A3B"/><rect x="74" y="48" width="8" height="24" rx="4" fill="#8A5A3B"/><rect x="29" y="52" width="48" height="10" rx="4" fill="#FFF"/><rect x="44" y="50" width="34" height="12" rx="5" fill="#62B6D9"/><ellipse cx="37" cy="53" rx="8" ry="5" fill="#FFE9C7"/>'),
+hen: sv('<ellipse cx="52" cy="58" rx="21" ry="17" fill="#FBEEDB" stroke="#E5CFA3" stroke-width="2"/><circle cx="38" cy="44" r="10" fill="#FBEEDB" stroke="#E5CFA3" stroke-width="2"/><circle cx="38" cy="36" r="3.4" fill="#E64A4A"/><circle cx="43" cy="34" r="3" fill="#E64A4A"/><polygon points="27,44 19,47 27,50" fill="#F2A100"/><circle cx="36" cy="43" r="2.4" fill="#46302A"/><path d="M48,55 q10,4 12,12" stroke="#E5CFA3" stroke-width="2.4" fill="none"/><path d="M46,75 v6 M58,75 v6" stroke="#F2A100" stroke-width="2.6" stroke-linecap="round"/>'),
+web: sv('<g stroke="#B0A695" stroke-width="2" fill="none"><circle cx="50" cy="52" r="10"/><circle cx="50" cy="52" r="20"/><circle cx="50" cy="52" r="30"/><path d="M50,20 V84 M20,52 H80 M29,31 L71,73 M71,31 L29,73"/></g><circle cx="63" cy="62" r="4" fill="#46302A"/><path d="M60,65 l-5,5 M66,65 l5,5 M60,59 l-5,-4 M66,59 l5,-4" stroke="#46302A" stroke-width="1.6"/>'),
+ship: sv('<path d="M22,62 H78 L66,78 H34 Z" fill="#C68958"/><line x1="50" y1="26" x2="50" y2="62" stroke="#8A5A3B" stroke-width="3"/><polygon points="53,30 53,56 75,56" fill="#E64A4A"/><polygon points="47,34 47,56 30,56" fill="#FFF"/><polygon points="50,26 50,33 60,29" fill="#FFC94D"/><path d="M20,80 q8,-5 15,0 q8,5 15,0 q8,-5 15,0 q8,5 15,0" stroke="#62B6D9" stroke-width="3" fill="none" stroke-linecap="round"/>'),
+shell: sv('<path d="M28,66 A24,24 0 0 1 72,66 L50,72 Z" fill="#F8A8C0" stroke="#E07FA4" stroke-width="2"/><path d="M50,72 L50,43 M50,72 L36,48 M50,72 L64,48 M50,72 L29,58 M50,72 L71,58" stroke="#FFF" stroke-width="2.4" stroke-linecap="round"/><ellipse cx="50" cy="73" rx="7" ry="4" fill="#E07FA4"/>'),
+fish: sv('<ellipse cx="45" cy="55" rx="21" ry="14" fill="#62B6D9"/><polygon points="63,55 81,42 81,68" fill="#3E8FB3"/><circle cx="36" cy="51" r="3.2" fill="#FFF"/><circle cx="36" cy="51" r="1.8" fill="#46302A"/><path d="M46,46 q6,9 0,18" stroke="#3E8FB3" stroke-width="2.4" fill="none"/><circle cx="26" cy="36" r="3" fill="#CFEAF5"/><circle cx="20" cy="28" r="2.2" fill="#CFEAF5"/>'),
+chick: sv('<circle cx="50" cy="55" r="21" fill="#FFD66B"/><circle cx="44" cy="49" r="2.8" fill="#46302A"/><polygon points="58,52 70,56 58,60" fill="#F2A100"/><path d="M33,57 q-6,4 -4,10" stroke="#F2B300" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M44,76 v6 M56,76 v6" stroke="#F2A100" stroke-width="2.6" stroke-linecap="round"/><path d="M42,33 q2,-7 8,-5" stroke="#F2B300" stroke-width="2.4" fill="none" stroke-linecap="round"/>'),
+whale: sv('<path d="M20,58 Q20,36 50,36 Q80,36 80,56 Q70,70 42,70 Q20,70 20,58 Z" fill="#62B6D9"/><path d="M76,52 q12,2 10,14 q-8,-6 -14,-4 Z" fill="#3E8FB3"/><circle cx="34" cy="52" r="3" fill="#46302A"/><path d="M30,60 q5,4 10,0" stroke="#2F5E77" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="46" cy="26" r="3" fill="#9ED7EA"/><circle cx="52" cy="20" r="2.4" fill="#9ED7EA"/><circle cx="41" cy="20" r="2" fill="#9ED7EA"/>'),
+wheel: sv('<circle cx="50" cy="54" r="25" fill="#5C5247"/><circle cx="50" cy="54" r="18" fill="#EBE2D2"/><g stroke="#5C5247" stroke-width="4" stroke-linecap="round"><path d="M50,36 V72 M32,54 H68 M37,41 L63,67 M63,41 L37,67"/></g><circle cx="50" cy="54" r="6" fill="#5C5247"/>'),
+bath: sv('<path d="M22,52 h56 v6 q0,18 -18,18 h-20 q-18,0 -18,-18 z" fill="#FFF" stroke="#C9BCA8" stroke-width="2.4"/><rect x="18" y="48" width="64" height="7" rx="3.5" fill="#9ED7EA"/><path d="M30,76 l-3,8 M70,76 l3,8" stroke="#C9BCA8" stroke-width="3" stroke-linecap="round"/><circle cx="42" cy="40" r="5" fill="#D8F0F8" stroke="#9ED7EA" stroke-width="1.6"/><circle cx="54" cy="32" r="6.5" fill="#D8F0F8" stroke="#9ED7EA" stroke-width="1.6"/><circle cx="64" cy="42" r="4" fill="#D8F0F8" stroke="#9ED7EA" stroke-width="1.6"/>'),
+star: sv('<polygon points="50,16 59.5,38.5 84,40.5 65.5,56.5 71.5,80 50,67 28.5,80 34.5,56.5 16,40.5 40.5,38.5" fill="#FFC94D" stroke="#E8A800" stroke-width="2.4" stroke-linejoin="round"/><circle cx="43" cy="46" r="2.2" fill="#B97900"/><circle cx="57" cy="46" r="2.2" fill="#B97900"/><path d="M44,55 Q50,59 56,55" stroke="#B97900" stroke-width="2" fill="none" stroke-linecap="round"/>'),
+stop: sv('<polygon points="36,22 64,22 80,38 80,66 64,82 36,82 20,66 20,38" fill="#E64A4A" stroke="#B33030" stroke-width="3"/><text x="50" y="59" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="bold" fill="#FFF" text-anchor="middle">STOP</text>'),
+block: sv('<rect x="26" y="46" width="28" height="28" rx="4" fill="#62B6D9" stroke="#3E8FB3" stroke-width="2.4"/><text x="40" y="67" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="bold" fill="#FFF" text-anchor="middle">A</text><rect x="46" y="26" width="28" height="28" rx="4" fill="#E64A4A" stroke="#B33030" stroke-width="2.4"/><text x="60" y="47" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="bold" fill="#FFF" text-anchor="middle">B</text>'),
+frog: sv('<ellipse cx="50" cy="60" rx="25" ry="18" fill="#69B45E"/><circle cx="37" cy="42" r="9.5" fill="#69B45E"/><circle cx="63" cy="42" r="9.5" fill="#69B45E"/><circle cx="37" cy="41" r="5" fill="#FFF"/><circle cx="63" cy="41" r="5" fill="#FFF"/><circle cx="37" cy="41" r="2.4" fill="#46302A"/><circle cx="63" cy="41" r="2.4" fill="#46302A"/><path d="M38,62 Q50,72 62,62" stroke="#2F7249" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="32" cy="58" r="3" fill="#F4A0A0" opacity=".7"/><circle cx="68" cy="58" r="3" fill="#F4A0A0" opacity=".7"/>'),
+tree: sv('<rect x="46" y="56" width="8" height="22" rx="3" fill="#8A5A3B"/><circle cx="50" cy="40" r="17" fill="#69B45E"/><circle cx="36" cy="49" r="12" fill="#7FBF6B"/><circle cx="64" cy="49" r="12" fill="#7FBF6B"/><circle cx="44" cy="38" r="3" fill="#E64A4A"/><circle cx="58" cy="44" r="3" fill="#E64A4A"/>'),
+truck: sv('<rect x="38" y="38" width="42" height="28" rx="3" fill="#62B6D9"/><path d="M20,52 h18 v14 h-20 v-10 q0,-4 2,-4 z" fill="#E64A4A"/><rect x="24" y="54" width="9" height="7" rx="2" fill="#D8F0F8"/><circle cx="33" cy="70" r="7" fill="#46302A"/><circle cx="33" cy="70" r="3" fill="#B0A695"/><circle cx="64" cy="70" r="7" fill="#46302A"/><circle cx="64" cy="70" r="3" fill="#B0A695"/>'),
+flag: sv('<line x1="34" y1="20" x2="34" y2="82" stroke="#8A5A3B" stroke-width="4" stroke-linecap="round"/><path d="M37,24 Q56,17 75,26 L75,46 Q56,38 37,46 Z" fill="#E64A4A"/><circle cx="34" cy="18" r="3.4" fill="#FFC94D"/>'),
+snail: sv('<path d="M22,74 Q20,62 33,63 L70,69 Q62,77 30,77 Z" fill="#B6D67E"/><circle cx="57" cy="52" r="18" fill="#F2A65A" stroke="#D9883B" stroke-width="2.4"/><path d="M57,52 m0,-11 a11,11 0 1 1 -11,11 a7,7 0 1 0 7,-7" fill="none" stroke="#D9883B" stroke-width="2.4" stroke-linecap="round"/><path d="M28,64 q-2,-9 -5,-12 M34,63 q1,-9 4,-13" stroke="#8FB55C" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="22" cy="50" r="2.6" fill="#46302A"/><circle cx="39" cy="48" r="2.6" fill="#46302A"/>'),
+crab: sv('<ellipse cx="50" cy="60" rx="21" ry="14" fill="#E64A4A"/><path d="M34,50 q-4,-12 -13,-11 M66,50 q4,-12 13,-11" stroke="#E64A4A" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="20" cy="38" r="6" fill="#E64A4A"/><circle cx="80" cy="38" r="6" fill="#E64A4A"/><path d="M33,70 l-7,7 M43,73 l-4,8 M67,70 l7,7 M57,73 l4,8" stroke="#B33030" stroke-width="3" stroke-linecap="round"/><circle cx="43" cy="55" r="2.8" fill="#46302A"/><circle cx="57" cy="55" r="2.8" fill="#46302A"/><path d="M44,63 q6,4 12,0" stroke="#7A1F1F" stroke-width="2" fill="none" stroke-linecap="round"/>'),
+drum: sv('<rect x="27" y="44" width="46" height="26" fill="#E64A4A"/><ellipse cx="50" cy="70" rx="23" ry="8" fill="#B33030"/><ellipse cx="50" cy="44" rx="23" ry="8" fill="#FFF1D6" stroke="#E5CFA3" stroke-width="2"/><path d="M27,50 L40,62 L53,50 L66,62 L73,55" stroke="#FFC94D" stroke-width="2.6" fill="none"/><line x1="36" y1="40" x2="22" y2="24" stroke="#8A5A3B" stroke-width="3" stroke-linecap="round"/><line x1="64" y1="40" x2="78" y2="24" stroke="#8A5A3B" stroke-width="3" stroke-linecap="round"/><circle cx="22" cy="23" r="4" fill="#C68958"/><circle cx="78" cy="23" r="4" fill="#C68958"/>'),
+cake: sv('<rect x="26" y="52" width="48" height="22" rx="5" fill="#F8A8C0"/><path d="M26,56 q4,7 8,0 q4,7 8,0 q4,7 8,0 q4,7 8,0 q4,7 8,0 q4,7 8,0 L74,52 L26,52 Z" fill="#FFF"/><rect x="47.5" y="34" width="5" height="16" rx="2" fill="#62B6D9"/><ellipse cx="50" cy="29" rx="3.6" ry="5.5" fill="#FFC94D"/><rect x="20" y="74" width="60" height="4" rx="2" fill="#C9BCA8"/>'),
+gate: sv('<rect x="24" y="40" width="7" height="36" rx="3" fill="#8A5A3B"/><rect x="69" y="40" width="7" height="36" rx="3" fill="#8A5A3B"/><rect x="36" y="46" width="6" height="30" rx="3" fill="#A8714A"/><rect x="47" y="46" width="6" height="30" rx="3" fill="#A8714A"/><rect x="58" y="46" width="6" height="30" rx="3" fill="#A8714A"/><path d="M24,46 Q50,28 76,46" stroke="#8A5A3B" stroke-width="5" fill="none" stroke-linecap="round"/><rect x="22" y="60" width="56" height="5" fill="#8A5A3B"/>'),
+bike: sv('<circle cx="31" cy="64" r="14" fill="none" stroke="#46302A" stroke-width="3.4"/><circle cx="69" cy="64" r="14" fill="none" stroke="#46302A" stroke-width="3.4"/><path d="M31,64 L45,42 L62,42 L69,64 M45,42 L52,64 L31,64" stroke="#E64A4A" stroke-width="3.4" fill="none" stroke-linejoin="round"/><path d="M62,42 l-3,-7 h8" stroke="#46302A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M44,40 h8" stroke="#46302A" stroke-width="3.4" stroke-linecap="round"/>'),
+kite: sv('<polygon points="50,18 72,46 50,74 28,46" fill="#62B6D9" stroke="#3E8FB3" stroke-width="2.4"/><path d="M50,18 V74 M28,46 H72" stroke="#3E8FB3" stroke-width="2"/><path d="M50,74 Q44,84 50,92" stroke="#46302A" stroke-width="1.8" fill="none"/><polygon points="45,80 51,82 47,86" fill="#E64A4A"/><polygon points="47,88 53,89 49,93" fill="#FFC94D"/>'),
+five: sv('<circle cx="50" cy="52" r="28" fill="#FFC94D" stroke="#E8A800" stroke-width="3"/><text x="50" y="66" font-family="Arial,Helvetica,sans-serif" font-size="40" font-weight="bold" fill="#46302A" text-anchor="middle">5</text>'),
+rope: sv('<circle cx="50" cy="54" r="22" fill="none" stroke="#C68958" stroke-width="7"/><circle cx="50" cy="54" r="11" fill="none" stroke="#C68958" stroke-width="7"/><path d="M71,60 q10,6 9,16" stroke="#C68958" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M33,40 l5,5 M46,32 l3,6 M62,34 l-3,6 M70,46 l-6,3" stroke="#A8714A" stroke-width="2" stroke-linecap="round"/>'),
+nose: sv('<circle cx="50" cy="52" r="30" fill="#F8D7AE"/><path d="M50,32 Q45,52 40,60 Q44,70 50,67 Q56,70 60,60 Q55,52 50,32" fill="#F2BC85"/><ellipse cx="44" cy="63" rx="3" ry="2.2" fill="#C98B52"/><ellipse cx="56" cy="63" rx="3" ry="2.2" fill="#C98B52"/>'),
+home: sv('<rect x="28" y="48" width="44" height="30" fill="#FFE0A3"/><polygon points="22,50 50,26 78,50" fill="#E64A4A"/><rect x="44" y="58" width="12" height="20" rx="2" fill="#8A5A3B"/><rect x="32" y="54" width="10" height="10" rx="2" fill="#9ED7EA" stroke="#FFF" stroke-width="2"/><rect x="58" y="54" width="10" height="10" rx="2" fill="#9ED7EA" stroke="#FFF" stroke-width="2"/><rect x="62" y="32" width="7" height="12" fill="#B05A2A"/>'),
+bone: sv('<circle cx="27" cy="46" r="7.5" fill="#FFF" stroke="#D8CBB6" stroke-width="2.4"/><circle cx="27" cy="60" r="7.5" fill="#FFF" stroke="#D8CBB6" stroke-width="2.4"/><circle cx="73" cy="46" r="7.5" fill="#FFF" stroke="#D8CBB6" stroke-width="2.4"/><circle cx="73" cy="60" r="7.5" fill="#FFF" stroke="#D8CBB6" stroke-width="2.4"/><rect x="27" y="46" width="46" height="14" fill="#FFF" stroke="#D8CBB6" stroke-width="2.4"/><rect x="30" y="49" width="40" height="8" fill="#FFF"/>'),
+cube: sv('<polygon points="32,42 50,30 78,30 60,42" fill="#9ED7EA"/><rect x="32" y="42" width="28" height="28" fill="#62B6D9"/><polygon points="60,42 78,30 78,58 60,70" fill="#3E8FB3"/>'),
+snake: sv('<path d="M22,66 Q34,48 50,60 Q66,72 74,56" stroke="#69B45E" stroke-width="10" fill="none" stroke-linecap="round"/><circle cx="75" cy="53" r="8" fill="#69B45E"/><circle cx="77" cy="51" r="2" fill="#46302A"/><path d="M82,56 l7,3 m-7,-3 l7,-1" stroke="#E64A4A" stroke-width="2" stroke-linecap="round"/><path d="M30,62 l4,-4 M44,57 l4,4 M58,66 l4,-3" stroke="#4F9147" stroke-width="2" stroke-linecap="round"/>'),
+cone: sv('<polygon points="37,50 63,50 50,84" fill="#E8B574" stroke="#C68958" stroke-width="2"/><path d="M40,58 L60,58 M43,66 L57,66 M46,74 L54,74" stroke="#C68958" stroke-width="1.8"/><circle cx="50" cy="40" r="14" fill="#F8A8C0"/><circle cx="43" cy="34" r="5" fill="#FBC4D6"/>'),
+rose: sv('<line x1="50" y1="56" x2="50" y2="84" stroke="#4D9B68" stroke-width="3.4" stroke-linecap="round"/><ellipse cx="58" cy="72" rx="7" ry="4" fill="#69B45E" transform="rotate(-30 58 72)"/><circle cx="50" cy="42" r="16" fill="#EA6E96"/><path d="M50,42 m0,-9 a9,9 0 1 1 -9,9 a5.5,5.5 0 1 0 5.5,-5.5" fill="none" stroke="#C44E78" stroke-width="2.4" stroke-linecap="round"/><circle cx="36" cy="48" r="6" fill="#F08CB0"/><circle cx="64" cy="48" r="6" fill="#F08CB0"/>'),
+rain: sv('<ellipse cx="42" cy="40" rx="13" ry="10" fill="#E9E4DA"/><ellipse cx="58" cy="38" rx="15" ry="12" fill="#F3EFE7"/><ellipse cx="66" cy="44" rx="10" ry="8" fill="#E9E4DA"/><g stroke="#62B6D9" stroke-width="3.4" stroke-linecap="round"><path d="M38,58 l-4,9 M52,58 l-4,9 M66,58 l-4,9 M45,72 l-4,9 M59,72 l-4,9"/></g>'),
+mail: sv('<rect x="24" y="36" width="52" height="38" rx="5" fill="#FFF" stroke="#C9BCA8" stroke-width="2.6"/><path d="M26,40 L50,58 L74,40" stroke="#E64A4A" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="66" cy="66" r="4" fill="#FFC94D"/>'),
+train: sv('<rect x="22" y="42" width="32" height="18" rx="7" fill="#62B6D9"/><rect x="52" y="32" width="24" height="28" rx="4" fill="#E64A4A"/><rect x="57" y="37" width="13" height="10" rx="2" fill="#D8F0F8"/><rect x="28" y="30" width="8" height="13" fill="#3E8FB3"/><circle cx="33" cy="66" r="7" fill="#46302A"/><circle cx="33" cy="66" r="2.6" fill="#B0A695"/><circle cx="63" cy="66" r="7" fill="#46302A"/><circle cx="63" cy="66" r="2.6" fill="#B0A695"/><circle cx="36" cy="22" r="4.5" fill="#E9E4DA"/><circle cx="44" cy="16" r="3.4" fill="#E9E4DA"/>'),
+feet: sv('<ellipse cx="38" cy="60" rx="10" ry="16" fill="#F2BC85"/><circle cx="31" cy="42" r="3" fill="#F2BC85"/><circle cx="37" cy="40" r="3.3" fill="#F2BC85"/><circle cx="43" cy="41" r="3" fill="#F2BC85"/><ellipse cx="64" cy="62" rx="10" ry="16" fill="#F2BC85"/><circle cx="57" cy="44" r="3" fill="#F2BC85"/><circle cx="63" cy="42" r="3.3" fill="#F2BC85"/><circle cx="69" cy="43" r="3" fill="#F2BC85"/>'),
+seed: sv('<path d="M20,80 Q50,64 80,80 L80,84 L20,84 Z" fill="#8A5A3B"/><ellipse cx="50" cy="68" rx="6" ry="9" fill="#C68958" transform="rotate(18 50 68)"/><path d="M50,58 Q50,46 50,42" stroke="#4D9B68" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="43" cy="42" rx="7" ry="4.5" fill="#7FBF6B" transform="rotate(-24 43 42)"/><ellipse cx="57" cy="40" rx="7" ry="4.5" fill="#69B45E" transform="rotate(24 57 40)"/>'),
+bee: sv('<ellipse cx="50" cy="58" rx="18" ry="13" fill="#FFC94D"/><path d="M44,46 v24 M53,45 v26" stroke="#46302A" stroke-width="5"/><ellipse cx="40" cy="38" rx="9" ry="12" fill="#FFF" opacity=".85" transform="rotate(-24 40 38)"/><ellipse cx="60" cy="38" rx="9" ry="12" fill="#FFF" opacity=".85" transform="rotate(24 60 38)"/><circle cx="35" cy="55" r="2.6" fill="#46302A"/><polygon points="68,58 76,60 68,62" fill="#46302A"/>'),
+sheep: sv('<circle cx="38" cy="52" r="12" fill="#FBF4E4" stroke="#E5D9C0" stroke-width="2"/><circle cx="52" cy="46" r="13" fill="#FBF4E4" stroke="#E5D9C0" stroke-width="2"/><circle cx="64" cy="54" r="11" fill="#FBF4E4" stroke="#E5D9C0" stroke-width="2"/><circle cx="46" cy="60" r="12" fill="#FBF4E4"/><circle cx="60" cy="62" r="11" fill="#FBF4E4"/><circle cx="74" cy="50" r="8.5" fill="#6B5444"/><ellipse cx="80" cy="45" rx="4.5" ry="2.6" fill="#6B5444"/><circle cx="72" cy="48" r="1.8" fill="#FFF"/><path d="M44,72 v8 M58,72 v8" stroke="#6B5444" stroke-width="3" stroke-linecap="round"/>'),
+boat: sv('<path d="M24,62 H76 L64,76 H36 Z" fill="#C68958"/><line x1="50" y1="28" x2="50" y2="62" stroke="#8A5A3B" stroke-width="3"/><polygon points="47,32 47,58 28,58" fill="#E64A4A"/><polygon points="53,38 53,58 70,58" fill="#FFF"/><path d="M18,80 q8,-5 16,0 q8,5 16,0 q8,-5 16,0 q8,5 16,0" stroke="#62B6D9" stroke-width="3" fill="none" stroke-linecap="round"/>'),
+coat: sv('<path d="M38,36 L62,36 L70,76 L30,76 Z" fill="#62B6D9"/><path d="M38,36 L30,44 L24,68 L32,70 L38,46 Z" fill="#3E8FB3"/><path d="M62,36 L70,44 L76,68 L68,70 L62,46 Z" fill="#3E8FB3"/><polygon points="44,36 50,46 56,36" fill="#FFF"/><line x1="50" y1="46" x2="50" y2="76" stroke="#3E8FB3" stroke-width="2.4"/><circle cx="45" cy="56" r="2.2" fill="#FFF"/><circle cx="45" cy="66" r="2.2" fill="#FFF"/>'),
+soap: sv('<rect x="26" y="50" width="48" height="24" rx="12" fill="#F8A8C0"/><path d="M34,58 q8,-4 14,0" stroke="#FBC4D6" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="34" cy="38" r="5" fill="#E7F6FB" stroke="#9ED7EA" stroke-width="1.8"/><circle cx="48" cy="30" r="7" fill="#E7F6FB" stroke="#9ED7EA" stroke-width="1.8"/><circle cx="62" cy="38" r="4" fill="#E7F6FB" stroke="#9ED7EA" stroke-width="1.8"/>'),
+light: sv('<circle cx="50" cy="46" r="17" fill="#FFE9A8" stroke="#E8A800" stroke-width="2.6"/><path d="M44,52 q6,6 12,0 l-2,10 h-8 z" fill="#FFE9A8" stroke="#E8A800" stroke-width="2"/><rect x="43" y="62" width="14" height="9" rx="3" fill="#B0A695"/><path d="M45,66 h10" stroke="#8C8275" stroke-width="2"/><g stroke="#FFC94D" stroke-width="3" stroke-linecap="round"><path d="M50,20 v-6 M28,46 h-7 M72,46 h7 M34,30 l-5,-5 M66,30 l5,-5"/></g>'),
+night: sv('<rect x="16" y="18" width="68" height="68" rx="16" fill="#33415C"/><circle cx="46" cy="50" r="16" fill="#FFE9A8"/><circle cx="54" cy="45" r="13" fill="#33415C"/><circle cx="68" cy="32" r="2.4" fill="#FFF"/><circle cx="30" cy="36" r="2" fill="#FFF"/><circle cx="66" cy="68" r="2" fill="#FFF"/><polygon points="34,66 36,70 40,70 37,73 38,77 34,75 30,77 31,73 28,70 32,70" fill="#FFF"/>'),
+};
+/* words without a drawing get a friendly letter tile instead */
+function artFor(word){
+  if(ART[word]) return ART[word];
+  const hues = ['#62B6D9','#EA6E96','#7FBF6B','#F2A65A','#FFC94D'];
+  const c = hues[word.charCodeAt(0) % hues.length];
+  return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="14" y="14" width="72" height="72" rx="18" fill="'+c+'" opacity=".25"/><text x="50" y="66" font-family="Fredoka,Arial,sans-serif" font-size="40" font-weight="600" fill="#46302A" text-anchor="middle">'+word.charAt(0).toUpperCase()+'</text></svg>';
+}
+
+/* =========================================================================
+   CURRICULUM — the phonics scope & sequence.
+   Each word is tagged with the features the question generators need:
+   on = onset sound/letter · v = target vowel · dg = digraph (+pos) ·
+   bl = blend · team = vowel team · fam = rhyme family.
+   Only level-decodable words appear in each level's bank.
+   ========================================================================= */
+const VOWELS = ['a','e','i','o','u'];
+const LEVELS = [
+{
+  key:'cvc', name:'Sound Meadow', skill:'Short vowels & CVC words', eg:'cat · pin · bug',
+  color:'#4D9B68', types:['listen','missing','rhyme','start'],
+  cues:{c:'car',h:'house',p:'pizza',w:'water',b:'ball',s:'sock',r:'robot',d:'door',f:'fan',l:'lion',t:'turtle',m:'moon'},
+  words:[
+    {w:'cat',on:'c',v:'a',fam:'at'},{w:'hat',on:'h',v:'a',fam:'at'},{w:'bat',on:'b',v:'a',fam:'at'},
+    {w:'pig',on:'p',v:'i',fam:'ig'},{w:'wig',on:'w',v:'i',fam:'ig'},{w:'pin',on:'p',v:'i',fam:'in'},{w:'fin',on:'f',v:'i',fam:'in'},
+    {w:'bug',on:'b',v:'u',fam:'ug'},{w:'rug',on:'r',v:'u',fam:'ug'},{w:'sun',on:'s',v:'u',fam:'un'},{w:'fun',on:'f',v:'u',fam:'un'},
+    {w:'cup',on:'c',v:'u',fam:'up'},{w:'pup',on:'p',v:'u',fam:'up'},
+    {w:'dog',on:'d',v:'o',fam:'og'},{w:'log',on:'l',v:'o',fam:'og'},{w:'fox',on:'f',v:'o',fam:'ox'},{w:'box',on:'b',v:'o',fam:'ox'},
+    {w:'pot',on:'p',v:'o',fam:'ot'},{w:'dot',on:'d',v:'o',fam:'ot'},
+    {w:'bed',on:'b',v:'e',fam:'ed'},{w:'red',on:'r',v:'e',fam:'ed'},{w:'hen',on:'h',v:'e',fam:'en'},{w:'ten',on:'t',v:'e',fam:'en'},{w:'web',on:'w',v:'e',fam:'eb'}
+  ]
+},
+{
+  key:'dg', name:'Whisper Woods', skill:'Digraphs: sh, ch, th, wh', eg:'ship · chin · whale',
+  color:'#62B6D9', types:['start','listen','missing','end'],
+  cues:{sh:'shoe',ch:'cheese',th:'thumb',wh:'whisper'},
+  words:[
+    {w:'ship',dg:'sh',pos:'start',fam:'ip'},{w:'shop',dg:'sh',pos:'start',fam:'op'},{w:'shell',dg:'sh',pos:'start'},
+    {w:'fish',dg:'sh',pos:'end'},{w:'dish',dg:'sh',pos:'end'},{w:'wish',dg:'sh',pos:'end'},
+    {w:'chin',dg:'ch',pos:'start',fam:'in'},{w:'chat',dg:'ch',pos:'start',fam:'at'},{w:'chick',dg:'ch',pos:'start'},{w:'chop',dg:'ch',pos:'start',fam:'op'},
+    {w:'lunch',dg:'ch',pos:'end'},{w:'much',dg:'ch',pos:'end'},
+    {w:'thin',dg:'th',pos:'start',fam:'in'},{w:'thick',dg:'th',pos:'start'},{w:'bath',dg:'th',pos:'end'},{w:'math',dg:'th',pos:'end'},{w:'moth',dg:'th',pos:'end'},
+    {w:'whale',dg:'wh',pos:'start'},{w:'wheel',dg:'wh',pos:'start'},{w:'whip',dg:'wh',pos:'start',fam:'ip'}
+  ]
+},
+{
+  key:'bl', name:'Bramble Bridge', skill:'Blends: st, bl, gr, tr…', eg:'stop · flag · tree',
+  color:'#EA6E96', types:['start','missing','listen','rhyme'],
+  cues:{st:'stairs',bl:'blanket',gr:'grapes',tr:'train',fl:'flower',sn:'snow',cr:'crayon',dr:'dragon',cl:'cloud',pl:'plate'},
+  words:[
+    {w:'star',bl:'st'},{w:'stop',bl:'st',fam:'op'},{w:'step',bl:'st'},
+    {w:'blue',bl:'bl'},{w:'block',bl:'bl'},{w:'black',bl:'bl'},
+    {w:'grab',bl:'gr',fam:'ab'},{w:'green',bl:'gr'},{w:'grin',bl:'gr',fam:'in'},
+    {w:'trip',bl:'tr',fam:'ip'},{w:'tree',bl:'tr'},{w:'truck',bl:'tr'},
+    {w:'flag',bl:'fl',fam:'ag'},{w:'flip',bl:'fl',fam:'ip'},
+    {w:'snap',bl:'sn',fam:'ap'},{w:'snail',bl:'sn'},
+    {w:'crab',bl:'cr',fam:'ab'},{w:'drum',bl:'dr',fam:'um'},
+    {w:'clap',bl:'cl',fam:'ap'},{w:'plum',bl:'pl',fam:'um'}
+  ]
+},
+{
+  key:'sile', name:'Sunny Shore', skill:'Long vowels & silent-e', eg:'cake · bike · rope',
+  color:'#EE8A3C', types:['listen','missing','rhyme'],
+  cues:{},
+  words:[
+    {w:'cake',v:'a',fam:'ake'},{w:'lake',v:'a',fam:'ake'},{w:'snake',v:'a',fam:'ake'},
+    {w:'gate',v:'a',fam:'ate'},{w:'made',v:'a',fam:'ade'},{w:'cave',v:'a',fam:'ave'},
+    {w:'bike',v:'i',fam:'ike'},{w:'hike',v:'i',fam:'ike'},{w:'kite',v:'i',fam:'ite'},{w:'bite',v:'i',fam:'ite'},
+    {w:'ride',v:'i',fam:'ide'},{w:'five',v:'i',fam:'ive'},
+    {w:'rope',v:'o',fam:'ope'},{w:'nose',v:'o',fam:'ose'},{w:'rose',v:'o',fam:'ose'},
+    {w:'home',v:'o',fam:'ome'},{w:'bone',v:'o',fam:'one'},{w:'cone',v:'o',fam:'one'},
+    {w:'cube',v:'u',fam:'ube'},{w:'mule',v:'u',fam:'ule'},{w:'tune',v:'u',fam:'une'}
+  ]
+},
+{
+  key:'team', name:'Starlight Peak', skill:'Vowel teams: ai, ee, oa, igh', eg:'rain · feet · boat',
+  color:'#8B6FC9', types:['missing','listen','rhyme','sound'],
+  cues:{ai:'play',ee:'see',oa:'go',igh:'sky'},
+  soundNames:{ai:'ay',ee:'ee',oa:'oh',igh:'eye'},
+  words:[
+    {w:'rain',team:'ai',fam:'ain'},{w:'train',team:'ai',fam:'ain'},{w:'tail',team:'ai',fam:'ail'},{w:'mail',team:'ai',fam:'ail'},{w:'paint',team:'ai'},
+    {w:'feet',team:'ee'},{w:'seed',team:'ee'},{w:'bee',team:'ee',fam:'ee'},{w:'tree',team:'ee',fam:'ee'},{w:'sheep',team:'ee'},{w:'green',team:'ee'},
+    {w:'boat',team:'oa',fam:'oat'},{w:'coat',team:'oa',fam:'oat'},{w:'soap',team:'oa'},{w:'road',team:'oa',fam:'oad'},{w:'toad',team:'oa',fam:'oad'},
+    {w:'light',team:'igh',fam:'ight'},{w:'night',team:'igh',fam:'ight'},{w:'high',team:'igh'}
+  ]
+}
+];
+
+/* =========================================================================
+   STATE — in-memory only by design (no localStorage in this environment).
+   One record per skill drives both the kid-facing map and the parent view.
+   ========================================================================= */
+const state = {
+  skills: LEVELS.map((L,i)=>({
+    score:0, attempted:0, firstTryCorrect:0, tier:0, streak:0, missRun:0,
+    mastered:false, completed:false, unlocked: i===0
+  })),
+  levelIndex: 0,
+  round: null,          // {queue, qi, total, gained, firstTry}
+  busy: false           // input lock during feedback animations
+};
+
+/* =========================================================================
+   ADAPTIVE ENGINE (IXL-style SmartScore)
+   • The visible score climbs quickly at first and slows near the top, so
+     early effort feels rewarded and mastery (90+) feels earned.
+   • Streaks raise the difficulty tier (closer distractors, 4 choices, less
+     picture support); two stumbles in a row lower it again. The child never
+     sees the tier — they just feel the game meeting them where they are.
+   • Misses cost little (and nothing twice on the same question): the score
+     is a ladder, not a judge.
+   ========================================================================= */
+function scoreGain(sk){
+  const base = sk.score < 60 ? 9 : sk.score < 80 ? 6 : sk.score < 90 ? 4 : 3;
+  return base + Math.min(3, sk.streak);
+}
+function applyCorrect(sk, usedHint){
+  if(usedHint){ sk.score = Math.min(100, sk.score + 3); sk.streak = 0; }
+  else { sk.score = Math.min(100, sk.score + scoreGain(sk)); sk.streak++; }
+  sk.missRun = 0;
+  if(sk.streak >= 3 && sk.tier < 2){ sk.tier++; sk.streak = 0; }
+  if(sk.score >= 90) sk.mastered = true;
+}
+function applyMiss(sk){
+  sk.score = Math.max(0, sk.score - (sk.score > 80 ? 4 : 2));
+  sk.streak = 0; sk.missRun++;
+  if(sk.missRun >= 2 && sk.tier > 0){ sk.tier--; sk.missRun = 0; }
+}
+
+/* =========================================================================
+   QUESTION GENERATORS
+   Each returns: { type, text, big, visual, say, hintSay, target (string),
+                   grapheme (for hint highlighting), choices:[{label, art?}] }
+   Difficulty tier shapes every generator: tier 0 → 3 choices + pictures,
+   tier 1 → distractors get closer, tier 2 → 4 choices, words only.
+   ========================================================================= */
+function nChoices(tier){ return tier >= 2 ? 4 : 3; }
+function withArt(tier){ return tier < 2; }
+
+function genListen(L, sk, used){
+  const tgt = pickFresh(L.words, used);
+  let dis;
+  if(sk.tier >= 1 && tgt.fam){
+    // harder: prefer same rhyme family / same first letter (close confusables)
+    dis = sampleOther(L.words, w => w.w === tgt.w, 12)
+      .sort((a,b)=>closeness(b,tgt)-closeness(a,tgt)).slice(0, nChoices(sk.tier)-1);
+  } else {
+    dis = sampleOther(L.words, w => w.w === tgt.w || w.w.charAt(0) === tgt.w.charAt(0), nChoices(sk.tier)-1);
+    if(dis.length < nChoices(sk.tier)-1) dis = sampleOther(L.words, w=>w.w===tgt.w, nChoices(sk.tier)-1);
+  }
+  return {
+    type:'listen', target: tgt.w, grapheme: null,
+    text:'Listen, then tap the word!', big:'',
+    visual: ART.fox,
+    say: 'Tap the word… "'+tgt.w+'"! … "'+tgt.w+'".',
+    hintSay: 'Listen again… "'+tgt.w+'". Sound it out!',
+    choices: shuffle([tgt, ...dis]).map(w=>({label:w.w, art: withArt(sk.tier) ? artFor(w.w) : null}))
+  };
+}
+function closeness(a, b){
+  let s = 0;
+  if(a.fam && a.fam === b.fam) s += 2;
+  if(a.w.charAt(0) === b.w.charAt(0)) s += 1;
+  return s;
+}
+function pickFresh(pool, used){
+  const fresh = pool.filter(w => !used.has(w.w));
+  const w = fresh.length ? pick(fresh) : pick(pool);
+  used.add(w.w);
+  return w;
+}
+
+function genStartSound(L, sk, used){
+  // pick a target grapheme (onset letter, digraph, or blend)
+  const keyOf = w => w.bl || (w.pos !== 'end' ? w.dg : null) || w.on;
+  const candidates = L.words.filter(w => keyOf(w));
+  const tgt = pickFresh(candidates, used);
+  const g = keyOf(tgt);
+  const dis = sampleOther(L.words, w => keyOf(w) === g, nChoices(sk.tier)-1);
+  const cue = L.cues[g] || tgt.w;
+  return {
+    type:'start', target: tgt.w, grapheme: g,
+    text:'Tap the word that starts with…', big: g,
+    visual: null,
+    say:'Tap the word that starts with the "'+g+'" sound — like the start of "'+cue+'".',
+    hintSay:'Listen: "'+cue+'"… "'+tgt.w+'". They start the same! Find the word that begins with "'+g+'".',
+    choices: shuffle([tgt, ...dis]).map(w=>({label:w.w, art: withArt(sk.tier) ? artFor(w.w) : null}))
+  };
+}
+
+function genEndSound(L, sk, used){
+  const enders = L.words.filter(w => w.dg && w.pos === 'end');
+  if(!enders.length) return genStartSound(L, sk, used);
+  const tgt = pickFresh(enders, used);
+  const g = tgt.dg;
+  const dis = sampleOther(L.words, w => w.dg === g && w.pos === 'end', nChoices(sk.tier)-1);
+  return {
+    type:'end', target: tgt.w, grapheme: g,
+    text:'Tap the word that ends with…', big: g,
+    visual: null,
+    say:'Tap the word that ends with the "'+g+'" sound, like the end of "'+(L.cues[g]||g)+'".',
+    hintSay:'Say it slowly: "'+tgt.w+'". Can you hear "'+g+'" at the end?',
+    choices: shuffle([tgt, ...dis]).map(w=>({label:w.w, art: withArt(sk.tier) ? artFor(w.w) : null}))
+  };
+}
+
+function genMissing(L, sk, used){
+  // sound→letter mapping: blank out the level's focus grapheme
+  let pool, blankOf, options;
+  if(L.key === 'cvc' || L.key === 'sile'){
+    pool = L.words.filter(w => ART[w.w] && w.v);
+    blankOf = w => w.v;
+    options = VOWELS;
+  } else if(L.key === 'dg'){
+    pool = L.words.filter(w => ART[w.w] && w.dg);
+    blankOf = w => w.dg;
+    options = ['sh','ch','th','wh'];
+  } else if(L.key === 'bl'){
+    pool = L.words.filter(w => ART[w.w] && w.bl);
+    blankOf = w => w.bl;
+    options = Object.keys(L.cues);
+  } else { // vowel teams
+    pool = L.words.filter(w => ART[w.w] && w.team);
+    blankOf = w => w.team;
+    options = ['ai','ee','oa','igh'];
+  }
+  if(!pool.length) return genListen(L, sk, used);
+  const tgt = pickFresh(pool, used);
+  const g = blankOf(tgt);
+  const idx = tgt.w.indexOf(g);
+  const display = tgt.w.slice(0, idx) + '<span class="gap">' + '·'.repeat(g.length) + '</span>' + tgt.w.slice(idx + g.length);
+  const dis = shuffle(options.filter(o => o !== g)).slice(0, nChoices(sk.tier)-1);
+  return {
+    type:'missing', target: g, grapheme: g,
+    text:'This word is “'+tgt.w+'”. What is missing?', big: display,
+    visual: artFor(tgt.w),
+    say:'This word is "'+tgt.w+'"… "'+tgt.w+'". Which sound is missing?',
+    hintSay:'Say it slowly with me: "'+tgt.w+'". Listen for the missing sound.',
+    choices: shuffle([g, ...dis]).map(o=>({label:o, art:null}))
+  };
+}
+
+function genRhyme(L, sk, used){
+  const fams = {};
+  L.words.forEach(w => { if(w.fam){ (fams[w.fam] = fams[w.fam] || []).push(w); } });
+  const good = Object.keys(fams).filter(f => fams[f].length >= 2);
+  if(!good.length) return genListen(L, sk, used);
+  const fam = pick(good);
+  const [a, b] = shuffle(fams[fam]).slice(0, 2);
+  const dis = sampleOther(L.words, w => w.fam === fam || w.w === a.w || w.w === b.w, nChoices(sk.tier)-1);
+  return {
+    type:'rhyme', target: b.w, grapheme: fam,
+    text:'Which word rhymes with…', big: a.w,
+    visual: artFor(a.w),
+    say:'Which word rhymes with "'+a.w+'"? … "'+a.w+'".',
+    hintSay:'"'+a.w+'" ends with "'+fam+'". Find another "'+fam+'" word!',
+    choices: shuffle([b, ...dis]).map(w=>({label:w.w, art: withArt(sk.tier) ? artFor(w.w) : null}))
+  };
+}
+
+function genTeamSound(L, sk, used){
+  const tgt = pickFresh(L.words, used);
+  const g = tgt.team;
+  const dis = sampleOther(L.words, w => w.team === g, nChoices(sk.tier)-1);
+  return {
+    type:'sound', target: tgt.w, grapheme: g,
+    text:'Tap the word with this sound:', big: g,
+    visual: null,
+    say:'Tap the word with the "'+L.soundNames[g]+'" sound — like in "'+L.cues[g]+'".',
+    hintSay:'"'+L.cues[g]+'" has the "'+L.soundNames[g]+'" sound. So does "'+tgt.w+'"! Can you find it?',
+    choices: shuffle([tgt, ...dis]).map(w=>({label:w.w, art: withArt(sk.tier) ? artFor(w.w) : null}))
+  };
+}
+
+const GENERATORS = { listen:genListen, start:genStartSound, end:genEndSound, missing:genMissing, rhyme:genRhyme, sound:genTeamSound };
+const ROUND_LEN = 9;
+
+function makeRound(li){
+  const L = LEVELS[li], sk = state.skills[li];
+  const used = new Set();
+  const types = [];
+  while(types.length < ROUND_LEN) types.push(...shuffle(L.types));
+  const queue = types.slice(0, ROUND_LEN).map(t => GENERATORS[t](L, sk, used));
+  state.round = { queue, qi:0, total:ROUND_LEN, firstTry:0, missedHere:false, solved:false };
+}
+
+/* =========================================================================
+   WORLD SCENERY — shared layered backdrop, built once per screen.
+   ========================================================================= */
+function cloudSVG(){ return '<svg viewBox="0 0 120 50"><ellipse cx="40" cy="32" rx="26" ry="14" fill="#FFF" opacity=".9"/><ellipse cx="68" cy="26" rx="30" ry="17" fill="#FFF" opacity=".95"/><ellipse cx="94" cy="34" rx="20" ry="11" fill="#FFF" opacity=".85"/></svg>'; }
+function leafSVG(c){ return '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M12,2 Q22,8 18,18 Q12,24 6,18 Q2,8 12,2 Z" fill="'+c+'" opacity=".8"/><path d="M12,4 L12,20" stroke="#FFF" stroke-width="1" opacity=".5"/></svg>'; }
+function hillsSVG(variant){
+  const back = variant==='party' ? '#CDE6BF' : '#D5E8C5';
+  return '<svg viewBox="0 0 800 240" preserveAspectRatio="none">'
+   + '<path d="M0,120 Q200,40 420,110 Q620,170 800,90 L800,240 L0,240 Z" fill="'+back+'"/>'
+   + '<path d="M0,170 Q240,100 480,160 Q650,200 800,150 L800,240 L0,240 Z" fill="#AFD89A"/>'
+   + '<path d="M0,215 Q300,165 560,210 Q700,232 800,205 L800,240 L0,240 Z" fill="#8FC57E"/>'
+   + '<g><rect x="86" y="120" width="9" height="30" rx="4" fill="#8A5A3B"/><circle cx="90" cy="108" r="24" fill="#69B45E"/><circle cx="76" cy="120" r="15" fill="#7FBF6B"/></g>'
+   + '<g><rect x="690" y="135" width="8" height="26" rx="4" fill="#8A5A3B"/><circle cx="694" cy="124" r="21" fill="#69B45E"/><circle cx="708" cy="134" r="13" fill="#7FBF6B"/></g>'
+   + '<circle cx="250" cy="212" r="5" fill="#EA6E96"/><circle cx="262" cy="218" r="4" fill="#FFC94D"/><circle cx="540" cy="206" r="5" fill="#EA6E96"/><circle cx="552" cy="212" r="4" fill="#62B6D9"/>'
+   + '</svg>';
+}
+function buildWorlds(){
+  $$('.world').forEach(world => {
+    const variant = world.dataset.world;
+    let html = '<div class="sky"></div>';
+    html += '<div class="sunburst"><svg viewBox="0 0 100 100"><g stroke="#FFD97A" stroke-width="3" stroke-linecap="round" opacity=".8"><path d="M50,8 V20 M50,80 V92 M8,50 H20 M80,50 H92 M21,21 l8,8 M71,71 l8,8 M79,21 l-8,8 M29,71 l-8,8"/></g><circle cx="50" cy="50" r="17" fill="#FFD97A"/></svg></div>';
+    for(let i=0;i<3;i++){
+      const top = 4 + i*9, dur = 55 + i*22, w = 110 + i*40, delay = -i*23;
+      html += '<div class="cloud" style="top:'+top+'vh;width:'+w+'px;animation-duration:'+dur+'s;animation-delay:'+delay+'s">'+cloudSVG()+'</div>';
+    }
+    const leafColors = ['#7FBF6B','#EE8A3C','#FFC94D','#69B45E'];
+    for(let i=0;i<5;i++){
+      const left = 8 + i*19, dur = 11 + (i*3)%8, delay = -i*4;
+      html += '<div class="leaf" style="left:'+left+'vw;animation-duration:'+dur+'s;animation-delay:'+delay+'s">'+leafSVG(leafColors[i%4])+'</div>';
+    }
+    html += '<div class="hills">'+hillsSVG(variant)+'</div>';
+    world.innerHTML = html;
+  });
+}
+
+/* =========================================================================
+   PIP THE FOX — one drawing, reused everywhere at different sizes.
+   ========================================================================= */
+function foxSVG(){
+  return '<svg class="fox" viewBox="0 0 220 230" aria-hidden="true">'
+  + '<g class="fx-all">'
+  +   '<g class="fx-tail"><path d="M150,178 Q198,168 192,118 Q214,158 188,190 Q168,204 148,192 Z" fill="#EE8A3C"/><path d="M192,118 Q206,150 190,176 Q198,146 186,128 Z" fill="#FFF6E8"/></g>'
+  +   '<ellipse cx="110" cy="178" rx="46" ry="40" fill="#EE8A3C"/>'
+  +   '<ellipse cx="110" cy="188" rx="28" ry="26" fill="#FFF6E8"/>'
+  +   '<g class="fx-arm-l"><ellipse cx="72" cy="172" rx="11" ry="17" fill="#D96F1E" transform="rotate(18 72 172)"/></g>'
+  +   '<g class="fx-arm-r"><ellipse cx="148" cy="172" rx="11" ry="17" fill="#D96F1E" transform="rotate(-18 148 172)"/></g>'
+  +   '<ellipse cx="88" cy="214" rx="13" ry="8" fill="#D96F1E"/>'
+  +   '<ellipse cx="132" cy="214" rx="13" ry="8" fill="#D96F1E"/>'
+  +   '<g class="fx-head">'
+  +     '<polygon points="56,72 66,16 96,52" fill="#EE8A3C"/>'
+  +     '<polygon points="164,72 154,16 124,52" fill="#EE8A3C"/>'
+  +     '<polygon points="62,62 68,28 86,50" fill="#FBD3A4"/>'
+  +     '<polygon points="158,62 152,28 134,50" fill="#FBD3A4"/>'
+  +     '<circle cx="110" cy="90" r="46" fill="#EE8A3C"/>'
+  +     '<ellipse cx="92" cy="112" rx="21" ry="17" fill="#FFF6E8"/>'
+  +     '<ellipse cx="128" cy="112" rx="21" ry="17" fill="#FFF6E8"/>'
+  +     '<ellipse cx="78" cy="99" rx="7" ry="4.4" fill="#F4A0A0" opacity=".65"/>'
+  +     '<ellipse cx="142" cy="99" rx="7" ry="4.4" fill="#F4A0A0" opacity=".65"/>'
+  +     '<g class="fx-eyes">'
+  +       '<circle cx="92" cy="84" r="6.5" fill="#3A2520"/><circle cx="94.5" cy="81.5" r="2.2" fill="#FFF"/>'
+  +       '<circle cx="128" cy="84" r="6.5" fill="#3A2520"/><circle cx="130.5" cy="81.5" r="2.2" fill="#FFF"/>'
+  +     '</g>'
+  +     '<ellipse cx="110" cy="103" rx="7.5" ry="5.5" fill="#3A2520"/>'
+  +     '<path class="fx-mouth-happy" d="M99,114 Q110,123 121,114" stroke="#3A2520" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
+  +     '<ellipse class="fx-mouth-o" cx="110" cy="119" rx="7" ry="9" fill="#3A2520"/>'
+  +     '<path class="fx-mouth-hm" d="M101,118 Q106,114 111,118 Q116,122 121,118" stroke="#3A2520" stroke-width="3.2" fill="none" stroke-linecap="round"/>'
+  +   '</g>'
+  + '</g></svg>';
+}
+function setFoxMood(el, mood){
+  const fox = el.querySelector('.fox');
+  if(!fox) return;
+  fox.classList.remove('cheer','shrug');
+  if(mood){ void fox.getBoundingClientRect(); fox.classList.add(mood); }
+}
+
+/* =========================================================================
+   RENDERING
+   ========================================================================= */
+const SCREENS = ['screen-title','screen-map','screen-quest','screen-party'];
+function showScreen(id){
+  SCREENS.forEach(s => $('#'+s).classList.toggle('active', s===id));
+}
+
+const STONE_POS = [ [15,80], [39,65], [29,44], [57,35], [81,20] ];
+function renderMap(){
+  const area = $('#map-area');
+  $$('.stone', area).forEach(n => n.remove());
+  const starSVG = '<svg viewBox="0 0 24 24"><polygon points="12,2 14.9,8.6 22,9.3 16.7,14 18.3,21 12,17.4 5.7,21 7.3,14 2,9.3 9.1,8.6" fill="#FFC94D" stroke="#E8A800" stroke-width="1.2"/></svg>';
+  const bloomSVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="3.4" fill="#FFC94D"/><g fill="#EA6E96"><circle cx="12" cy="4.4" r="3"/><circle cx="17.5" cy="8" r="3"/><circle cx="15.6" cy="14.8" r="3"/><circle cx="8.4" cy="14.8" r="3"/><circle cx="6.5" cy="8" r="3"/></g><path d="M12,14 L12,22" stroke="#4D9B68" stroke-width="2"/></svg>';
+  const lockSVG = '<svg viewBox="0 0 24 24" width="26" height="26"><rect x="5" y="10" width="14" height="10" rx="3" fill="#FFF" opacity=".9"/><path d="M8,10 V7 a4,4 0 0 1 8,0 V10" stroke="#FFF" stroke-width="2.6" fill="none"/></svg>';
+  let nextFlagged = false;
+  LEVELS.forEach((L, i) => {
+    const sk = state.skills[i];
+    const b = document.createElement('button');
+    let cls = 'stone';
+    if(!sk.unlocked) cls += ' locked';
+    else if(sk.mastered) cls += ' mastered';
+    else if(sk.completed) cls += ' done open';
+    else { cls += ' open'; if(!nextFlagged){ cls += ' next'; nextFlagged = true; } }
+    b.className = cls;
+    b.style.left = STONE_POS[i][0] + '%';
+    b.style.top  = STONE_POS[i][1] + '%';
+    b.setAttribute('aria-label', L.name + ' — ' + L.skill + (sk.unlocked ? '' : ' (locked)'));
+    const padInner = sk.unlocked ? (sk.mastered ? starSVG.replace('viewBox','width="34" height="34" viewBox') : String(i+1)) : lockSVG;
+    b.innerHTML =
+      '<span class="pad" style="'+(sk.unlocked && !sk.mastered ? 'background:'+L.color : '')+'">'+ padInner +
+        '<span class="star-top">'+starSVG+'</span><span class="bloom">'+bloomSVG+'</span></span>' +
+      '<span class="label">'+L.name+'</span>';
+    b.addEventListener('click', () => {
+      if(!sk.unlocked){
+        Speech.say('Finish the path before this stone to unlock it. You can do it!');
+        b.querySelector('.pad').style.animation = 'gentleShake .5s ease';
+        setTimeout(()=>{ b.querySelector('.pad').style.animation=''; }, 600);
+        return;
+      }
+      startLevel(i);
+    });
+    area.appendChild(b);
+  });
+}
+
+function renderMeter(){
+  const sk = state.skills[state.levelIndex];
+  const fill = $('#score-fill');
+  fill.style.width = sk.score + '%';
+  fill.classList.toggle('gold', sk.score >= 90);
+  $('#score-num').textContent = sk.score;
+}
+function renderDots(){
+  const r = state.round;
+  $('#dots').innerHTML = r.queue.map((q,i)=>{
+    let c = 'dot';
+    if(i < r.qi) c += q.result === 'good' ? ' good' : ' hint';
+    if(i === r.qi) c += ' now';
+    return '<span class="'+c+'"></span>';
+  }).join('');
+}
+
+function renderQuestion(skipAudio){
+  const r = state.round, q = r.queue[r.qi];
+  const L = LEVELS[state.levelIndex];
+  r.missedHere = false; r.solved = false;
+  state.busy = false;
+  $('#level-name').textContent = L.name + ' · ' + L.skill;
+  renderMeter(); renderDots();
+
+  const vis = $('#prompt-visual');
+  if(q.visual){ vis.innerHTML = q.visual; vis.style.display = ''; }
+  else { vis.innerHTML = ''; vis.style.display = 'none'; }
+  $('#prompt-text').textContent = q.text;
+  $('#prompt-big').innerHTML = q.big || '';
+  $('#prompt-big').style.display = q.big ? '' : 'none';
+
+  const box = $('#choices');
+  box.innerHTML = '';
+  q.choices.forEach(ch => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.dataset.value = ch.label;
+    b.innerHTML = (ch.art ? '<span class="c-art">'+ch.art+'</span>' : '') +
+                  '<span class="c-word">'+ch.label+'</span>' +
+                  '<span class="check-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg></span>';
+    b.addEventListener('click', () => answer(b, ch.label));
+    box.appendChild(b);
+  });
+  // 'missing' answers are letter tiles — make them extra big
+  if(q.type === 'missing') $$('.c-word', box).forEach(el => { el.style.fontSize = 'clamp(2rem,6vmin,3rem)'; el.style.color = 'var(--blue-dk)'; });
+
+  hideBubble();
+  setFoxMood($('#screen-quest'), null);
+  if(!skipAudio) Speech.say(q.say);
+  $('#sr-live').textContent = q.text + (q.big ? ' ' + q.big.replace(/<[^>]*>/g,'') : '');
+}
+
+/* ---------- feedback helpers ---------- */
+const PRAISE = ['You did it!','Super reading!','Yes! That’s it!','Wow, great ears!','Amazing work!','You’re a star!'];
+const NUDGE  = ['Almost! Let’s try that sound again.','Good try! Listen one more time.','So close! Let’s listen again.'];
+function showBubble(text){
+  const b = $('#fox-bubble');
+  b.textContent = text;
+  b.classList.add('show');
+}
+function hideBubble(){ $('#fox-bubble').classList.remove('show'); }
+
+function answer(btn, value){
+  if(state.busy) return;
+  const r = state.round, q = r.queue[r.qi];
+  if(r.solved) return;
+  const sk = state.skills[state.levelIndex];
+  btn.classList.add('tapped');
+
+  if(value === q.target){
+    /* ----- correct ----- */
+    state.busy = true; r.solved = true;
+    q.result = r.missedHere ? 'hint' : 'good';
+    sk.attempted++;
+    if(!r.missedHere){ r.firstTry++; sk.firstTryCorrect++; }
+    applyCorrect(sk, r.missedHere);
+    renderMeter();
+    btn.classList.add('right');
+    $$('.choice').forEach(c => { c.disabled = true; if(c !== btn) c.classList.add('dim'); });
+    setFoxMood($('#screen-quest'), 'cheer');
+    const praise = pick(PRAISE);
+    showBubble(praise);
+    confettiBurstAt(btn);
+    Speech.say(praise + ' ' + (q.type === 'missing' ? '' : '"'+q.target+'"!'));
+    $('#sr-live').textContent = 'Correct! ' + praise;
+    setTimeout(nextQuestion, 1750);
+  } else {
+    /* ----- miss: scaffold, never scold ----- */
+    btn.classList.add('shake');
+    setTimeout(()=>btn.classList.remove('shake','tapped'), 600);
+    if(!r.missedHere){
+      r.missedHere = true;
+      sk.attempted++;        // count the item once
+      applyMiss(sk);
+      renderMeter();
+      setFoxMood($('#screen-quest'), 'shrug');
+      showBubble(pick(NUDGE));
+      highlightGrapheme(q);
+      Speech.say(q.hintSay || q.say);
+      $('#sr-live').textContent = 'Not yet — listen again and try once more.';
+    } else {
+      /* second miss → warm reveal and move on */
+      state.busy = true; r.solved = true;
+      q.result = 'hint';
+      const right = $$('.choice').find(c => c.dataset.value === q.target);
+      if(right) right.classList.add('right');
+      $$('.choice').forEach(c => { c.disabled = true; if(c.dataset.value !== q.target) c.classList.add('dim'); });
+      setFoxMood($('#screen-quest'), 'cheer');
+      showBubble('It’s “' + q.target + '”! You’ll get the next one!');
+      Speech.say('This one is "'+q.target+'". "'+q.target+'"! Let’s keep going — you’ve got this!');
+      $('#sr-live').textContent = 'The answer is ' + q.target + '. Moving on!';
+      setTimeout(nextQuestion, 2300);
+    }
+  }
+}
+
+/* hint scaffold: spotlight the target grapheme inside every choice word */
+function highlightGrapheme(q){
+  if(!q.grapheme) return;
+  $$('#choices .c-word').forEach(el => {
+    const w = el.textContent;
+    const i = w.indexOf(q.grapheme);
+    if(i >= 0){
+      el.innerHTML = w.slice(0,i) + '<span class="hl">' + q.grapheme + '</span>' + w.slice(i + q.grapheme.length);
+    }
+  });
+  const big = $('#prompt-big');
+  if(big.textContent.trim() === q.grapheme) big.innerHTML = '<span class="hl">' + q.grapheme + '</span>';
+}
+
+function nextQuestion(){
+  const r = state.round;
+  r.qi++;
+  if(r.qi >= r.total){ finishRound(); return; }
+  renderQuestion();
+}
+
+function startLevel(i){
+  state.levelIndex = i;
+  makeRound(i);
+  showScreen('screen-quest');
+  const L = LEVELS[i];
+  renderQuestion(true); // draw the question right away…
+  // …and speak the welcome + the first prompt as one friendly breath
+  Speech.say('Welcome to ' + L.name + '! ' + L.skill + '. Here we go! … ' + state.round.queue[0].say);
+}
+
+function finishRound(){
+  const r = state.round;
+  const sk = state.skills[state.levelIndex];
+  const L = LEVELS[state.levelIndex];
+  const wasNewlyCompleted = !sk.completed;
+  sk.completed = true;
+  if(state.levelIndex + 1 < LEVELS.length) state.skills[state.levelIndex + 1].unlocked = true;
+
+  const stars = r.firstTry >= 8 ? 3 : r.firstTry >= 6 ? 2 : 1;
+  const starShape = '<svg viewBox="0 0 24 24"><polygon points="12,2 14.9,8.6 22,9.3 16.7,14 18.3,21 12,17.4 5.7,21 7.3,14 2,9.3 9.1,8.6" fill="#FFC94D" stroke="#E8A800" stroke-width="1.2"/></svg>';
+  $('#party-stars').innerHTML = [0,1,2].map(()=>starShape).join('');
+  $('#party-title').textContent = sk.mastered ? 'Magnificent!' : stars === 3 ? 'Hooray!' : stars === 2 ? 'Great job!' : 'Good practicing!';
+  $('#party-sub').innerHTML = 'You got <b>' + r.firstTry + ' of ' + r.total + '</b> on the first try in ' + L.name + '.<br>Your score is <b>' + sk.score + '</b>' + (sk.mastered ? '' : ' — reach 90 for a star!');
+  $('#mastery-banner').classList.toggle('show', sk.mastered);
+
+  showScreen('screen-party');
+  setFoxMood($('#screen-party'), 'cheer');
+  confettiRain(sk.mastered ? 80 : 45);
+  setTimeout(()=>{
+    $$('#party-stars svg').forEach((s,i)=>{ if(i < stars) s.classList.add('lit'); });
+  }, 250);
+  let line = sk.mastered
+    ? 'Magnificent! You mastered ' + L.skill + '! The forest is blooming!'
+    : 'You finished ' + L.name + ' with ' + r.firstTry + ' first-try stars! ' + (wasNewlyCompleted && state.levelIndex+1 < LEVELS.length ? 'A new stepping stone just opened!' : 'Practice again to make your score climb!');
+  Speech.say(line);
+}
+
+/* =========================================================================
+   PARENT / TEACHER DASHBOARD
+   ========================================================================= */
+function renderDash(){
+  $('#dash-body').innerHTML = LEVELS.map((L,i)=>{
+    const sk = state.skills[i];
+    const acc = sk.attempted ? Math.round(100 * sk.firstTryCorrect / sk.attempted) : 0;
+    return '<tr>'
+      + '<td class="skill-name">'+(i+1)+'. '+L.skill+'<span class="skill-eg">'+L.eg+'</span></td>'
+      + '<td><span class="mini-meter"><i style="width:'+sk.score+'%"></i></span>'+sk.score+'</td>'
+      + '<td>'+sk.attempted+'</td>'
+      + '<td>'+(sk.attempted ? acc+'%' : '—')+'</td>'
+      + '<td>'+(sk.mastered ? '<span class="tag-mastered">★ Mastered</span>' : sk.unlocked ? '<span class="tag-todo">Practicing</span>' : '<span class="tag-todo">Locked</span>')+'</td>'
+      + '</tr>';
+  }).join('');
+}
+function openDash(){ renderDash(); $('#dash').classList.add('open'); }
+function closeDash(){ $('#dash').classList.remove('open'); }
+
+/* =========================================================================
+   FX — confetti rain + star bursts (pure DOM, cleaned up after themselves)
+   ========================================================================= */
+const FX_COLORS = ['#EE8A3C','#FFC94D','#4D9B68','#62B6D9','#EA6E96','#7FBF6B'];
+function confettiRain(n){
+  const fx = $('#fx');
+  for(let i=0;i<n;i++){
+    const d = document.createElement('i');
+    d.className = 'confetti';
+    d.style.left = Math.random()*100 + 'vw';
+    d.style.background = pick(FX_COLORS);
+    d.style.setProperty('--t', (2 + Math.random()*1.8) + 's');
+    d.style.setProperty('--spin', (380 + rint(720)) + 'deg');
+    d.style.setProperty('--sway', (rint(120)-60) + 'px');
+    d.style.animationDelay = (Math.random()*0.5) + 's';
+    if(Math.random()<.4){ d.style.borderRadius = '50%'; d.style.height = d.style.width = '11px'; }
+    fx.appendChild(d);
+    setTimeout(()=>d.remove(), 4600);
+  }
+}
+function confettiBurstAt(el){
+  const fx = $('#fx');
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width/2, cy = r.top + r.height/2;
+  for(let i=0;i<9;i++){
+    const s = document.createElement('span');
+    s.className = 'burst-star';
+    s.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="12,2 14.9,8.6 22,9.3 16.7,14 18.3,21 12,17.4 5.7,21 7.3,14 2,9.3 9.1,8.6" fill="'+pick(FX_COLORS)+'"/></svg>';
+    s.style.left = (cx-13) + 'px'; s.style.top = (cy-13) + 'px';
+    const ang = (i/9)*Math.PI*2;
+    s.style.setProperty('--dx', Math.cos(ang)*(70+rint(40)) + 'px');
+    s.style.setProperty('--dy', Math.sin(ang)*(70+rint(40)) - 30 + 'px');
+    fx.appendChild(s);
+    setTimeout(()=>s.remove(), 900);
+  }
+}
+
+/* =========================================================================
+   WIRING
+   ========================================================================= */
+function updateMuteIcon(){
+  $('#btn-mute').innerHTML = Speech.muted
+    ? '<svg viewBox="0 0 24 24" fill="#B0A695"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16 9l5 6M21 9l-5 6" stroke="#B0A695" stroke-width="2.2" stroke-linecap="round"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="#EE8A3C"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16 8.8a4.5 4.5 0 010 6.4M18.6 6a8 8 0 010 12" stroke="#EE8A3C" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+}
+
+function init(){
+  buildWorlds();
+  $('#title-fox').innerHTML = foxSVG();
+  $('#map-fox').innerHTML = foxSVG();
+  $('#quest-fox').innerHTML = foxSVG();
+  $('#party-fox').innerHTML = foxSVG();
+  updateMuteIcon();
+  if(!Speech.ok) $('#speech-note').textContent = '🔇 No voice on this device — follow the pictures and letters!';
+
+  $('#btn-start').addEventListener('click', () => {
+    // first user gesture: speech is now allowed to play
+    Speech.say('Hi! I’m Pip the Fox! Let’s sound out some words together. Tap a stepping stone to start!');
+    renderMap();
+    showScreen('screen-map');
+  });
+  $('#btn-back').addEventListener('click', () => {
+    if(Speech.ok){ try{ speechSynthesis.cancel(); }catch(e){} }
+    renderMap(); showScreen('screen-map');
+  });
+  $('#btn-say').addEventListener('click', () => {
+    const r = state.round;
+    if(r && r.queue[r.qi]) Speech.say(r.queue[r.qi].say);
+  });
+  $('#btn-mute').addEventListener('click', () => {
+    Speech.muted = !Speech.muted;
+    if(Speech.muted && Speech.ok){ try{ speechSynthesis.cancel(); }catch(e){} }
+    updateMuteIcon();
+  });
+  $('#btn-dash').addEventListener('click', openDash);
+  $('#btn-dash2').addEventListener('click', openDash);
+  $('#btn-dash-close').addEventListener('click', closeDash);
+  $('#dash').addEventListener('click', e => { if(e.target.id === 'dash') closeDash(); });
+  $('#btn-again').addEventListener('click', () => startLevel(state.levelIndex));
+  $('#btn-map').addEventListener('click', () => { renderMap(); showScreen('screen-map'); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeDash(); });
+}
+init();
+</script>
+</body>
+</html>
