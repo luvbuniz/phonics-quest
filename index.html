@@ -117,7 +117,7 @@ button{font-family:inherit;color:inherit;border:none;background:none;cursor:poin
 .fox{display:block;width:100%;height:auto}
 .fox .fx-all{transform-origin:50% 100%;animation:breathe 3.6s ease-in-out infinite}
 @keyframes breathe{0%,100%{transform:scaleY(1) scaleX(1)}50%{transform:scaleY(1.025) scaleX(.995)}}
-.fox .fx-eyes{transform-origin:110px 84px;animation:blink 4.6s infinite}
+.fox .fx-eyes{transform-origin:110px 88px;animation:blink 4.6s infinite}
 @keyframes blink{0%,93%,100%{transform:scaleY(1)}95.5%,97.5%{transform:scaleY(.08)}}
 .fox .fx-tail{transform-origin:150px 168px;animation:wag 4.2s ease-in-out infinite}
 @keyframes wag{0%,100%{transform:rotate(0deg)}50%{transform:rotate(7deg)}}
@@ -301,14 +301,15 @@ button{font-family:inherit;color:inherit;border:none;background:none;cursor:poin
 #screen-party{align-items:center;justify-content:center;text-align:center}
 .party-card{
   position:relative;z-index:3;background:rgba(255,255,255,.94);border-radius:36px;box-shadow:var(--shadow-lg);
-  padding:clamp(22px,4vmin,44px) clamp(26px,6vmin,60px);display:flex;flex-direction:column;align-items:center;gap:10px;
-  margin:16px;max-width:560px;animation:cardIn .55s var(--bounce) both;
+  padding:clamp(16px,3vmin,34px) clamp(26px,6vmin,60px);display:flex;flex-direction:column;align-items:center;gap:7px;
+  margin:14px;max-width:560px;max-height:94vh;overflow:auto;animation:cardIn .55s var(--bounce) both;
 }
-.party-title{font-family:var(--font-display);font-weight:700;font-size:clamp(1.9rem,6vmin,3rem);color:var(--green-dk)}
-.party-sub{font-weight:800;color:var(--ink-soft);font-size:clamp(1rem,3vmin,1.25rem)}
-.party-fox{width:clamp(140px,22vmin,200px)}
-.big-stars{display:flex;gap:8px;height:64px;align-items:center}
-.big-stars svg{width:56px;height:56px;transform:scale(0)}
+.party-card h2,.party-card p{margin:2px 0}
+.party-title{font-family:var(--font-display);font-weight:700;font-size:clamp(1.7rem,5vmin,2.5rem);color:var(--green-dk)}
+.party-sub{font-weight:800;color:var(--ink-soft);font-size:clamp(.95rem,2.6vmin,1.15rem)}
+.party-fox{width:clamp(104px,15vmin,160px);flex:none}
+.big-stars{display:flex;gap:8px;height:48px;align-items:center;flex:none}
+.big-stars svg{width:48px;height:48px;transform:scale(0)}
 .big-stars svg.lit{animation:starLand .6s var(--bounce) forwards}
 .big-stars svg:nth-child(2).lit{animation-delay:.25s}
 .big-stars svg:nth-child(3).lit{animation-delay:.5s}
@@ -328,16 +329,16 @@ button{font-family:inherit;color:inherit;border:none;background:none;cursor:poin
   background:rgba(255,255,255,.85);padding:9px 14px;border-radius:999px;box-shadow:var(--shadow);
   display:inline-flex;gap:6px;align-items:center;flex:none;
 }
-#dash{
+#dash, #badgecase{
   position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
   background:rgba(70,48,42,.45);opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s linear .3s;
 }
-#dash.open{opacity:1;visibility:visible;transition-delay:0s}
+#dash.open, #badgecase.open{opacity:1;visibility:visible;transition-delay:0s}
 .dash-card{
   background:#fff;border-radius:28px;box-shadow:var(--shadow-lg);width:min(94vw,640px);max-height:88vh;overflow:auto;
   padding:26px 28px;transform:translateY(30px) scale(.96);transition:transform .35s var(--bounce);
 }
-#dash.open .dash-card{transform:none}
+#dash.open .dash-card, #badgecase.open .dash-card{transform:none}
 .dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
 .dash-head h2{font-family:var(--font-display);font-weight:700;margin:0;font-size:1.5rem;color:var(--ink)}
 .dash-note{color:var(--ink-soft);font-weight:700;font-size:.92rem;margin:0 0 16px}
@@ -423,6 +424,24 @@ button{font-family:inherit;color:inherit;border:none;background:none;cursor:poin
 .fox.party .fx-mouth-happy{opacity:0}
 .fox.party .fx-mouth-o{opacity:1}
 
+/* =========================================================================
+   BADGES — collectible prizes, one per level; mastery turns them gold.
+   ========================================================================= */
+.badge{width:100%;height:auto;display:block}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:18px;margin-top:12px}
+.badge-cell{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.badge-cell .b-name{font-family:var(--font-display);font-weight:600;font-size:.95rem;color:var(--ink)}
+.badge-cell.locked .b-name{color:var(--ink-soft)}
+.badge-cell .b-state{font-size:.78rem;font-weight:800;color:var(--ink-soft)}
+.badge-cell.gold .b-state{color:var(--orange-dk)}
+.badge-cell.earned .badge, .badge-cell.gold .badge{filter:drop-shadow(0 5px 9px rgba(70,48,42,.25));animation:badgeIdle 3.2s ease-in-out infinite}
+@keyframes badgeIdle{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+#party-badge{width:clamp(96px,15vmin,126px);display:none}
+#party-badge.show{display:block;animation:badgeLand .95s var(--bounce) both}
+@keyframes badgeLand{0%{transform:scale(0) rotate(-540deg);opacity:0}70%{transform:scale(1.18) rotate(10deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.badge-caption{display:none;font-family:var(--font-display);font-weight:700;color:var(--orange-dk);font-size:clamp(1rem,3vmin,1.25rem)}
+.badge-caption.show{display:block;animation:popIn .5s var(--bounce) .45s both}
+
 @media (max-width:640px){
   .prompt-card{flex-direction:column;text-align:center;padding:14px 18px}
   .prompt-body{align-items:center}
@@ -458,8 +477,12 @@ button{font-family:inherit;color:inherit;border:none;background:none;cursor:poin
     <div class="world" data-world="map"></div>
     <div class="map-top">
       <div class="map-title"><span class="mini-fox" id="map-fox"></span> Pip&rsquo;s Forest Path</div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <button class="icon-btn" id="btn-mute" aria-label="Turn Pip's voice on or off" title="Voice on/off"></button>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <button class="icon-btn" id="btn-badges" aria-label="See my badge collection" title="My badges">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="9,2 7,9 11,7 12,10 13,7 17,9 15,2" fill="#E64A4A"/><circle cx="12" cy="15" r="6.5" fill="#FFC94D" stroke="#E8A800" stroke-width="1.6"/><polygon points="12,11 13.2,13.7 16,14 13.9,15.9 14.5,18.7 12,17.2 9.5,18.7 10.1,15.9 8,14 10.8,13.7" fill="#E8A800"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-music" aria-label="Turn the music on or off" title="Music on/off"></button>
+        <button class="icon-btn" id="btn-sfx" aria-label="Turn sounds and Pip's voice on or off" title="Sounds & voice on/off"></button>
         <button class="grown-btn" id="btn-dash" aria-label="Open the grown-ups dashboard">👋 Grown&#8209;ups</button>
       </div>
     </div>
@@ -515,6 +538,8 @@ button{font-family:inherit;color:inherit;border:none;background:none;cursor:poin
       <div class="party-fox" id="party-fox"></div>
       <h2 class="party-title" id="party-title">Hooray!</h2>
       <div class="big-stars" id="party-stars"></div>
+      <div id="party-badge"></div>
+      <p class="badge-caption" id="badge-caption"></p>
       <p class="party-sub" id="party-sub"></p>
       <div class="mastery-banner" id="mastery-banner">⭐ Skill mastered! The forest is blooming!</div>
       <div class="party-btns">
@@ -543,6 +568,20 @@ button{font-family:inherit;color:inherit;border:none;background:none;cursor:poin
       <tbody id="dash-body"></tbody>
     </table>
     <p class="dash-foot">💡 <b>Tip:</b> sit alongside your reader and have them say each sound out loud before tapping. Wrong answers are treated as &ldquo;let&rsquo;s listen again&rdquo; moments — there are no penalties, timers, or fail states.</p>
+  </div>
+</div>
+
+<!-- kid-facing badge collection -->
+<div id="badgecase" role="dialog" aria-modal="true" aria-labelledby="badge-title">
+  <div class="dash-card">
+    <div class="dash-head">
+      <h2 id="badge-title">🏅 My Badges</h2>
+      <button class="icon-btn" id="btn-badges-close" aria-label="Close my badges">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#46302A" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <p class="dash-note" id="badge-count"></p>
+    <div class="badge-grid" id="badge-grid"></div>
   </div>
 </div>
 
@@ -640,9 +679,10 @@ Speech.init();
    play a "wrong-sounding" note in — kind to little ears), and it ducks
    automatically whenever Pip speaks so the voice always wins. */
 const AudioKit = {
-  ctx:null, master:null, musicGain:null, sfxGain:null, muted:false, musicTimer:null, bar:0,
+  ctx:null, master:null, musicGain:null, sfxGain:null,
+  musicMuted:false, sfxMuted:false,   // independent toggles: music vs sounds+voice
+  musicTimer:null, bar:0,
   ensure(){
-    if(this.muted) return false;
     if(!this.ctx){
       const AC = window.AudioContext || window.webkitAudioContext;
       if(!AC) return false;
@@ -669,30 +709,31 @@ const AudioKit = {
     o.start(when); o.stop(when + dur + .05);
   },
   now(){ return this.ctx ? this.ctx.currentTime : 0; },
+  sfxOk(){ return !this.sfxMuted && this.ensure(); },
   /* tactile "boop" on every tap (pitch varies a little so it never drones) */
-  pop(){ if(!this.ensure()) return; this.note(300 + Math.random()*130, this.now(), .09, {type:'triangle', gain:.16, glide:560}); },
+  pop(){ if(!this.sfxOk()) return; this.note(300 + Math.random()*130, this.now(), .09, {type:'triangle', gain:.16, glide:560}); },
   /* rising C-major arpeggio + a sparkle on top */
-  success(){ if(!this.ensure()) return; const t = this.now();
+  success(){ if(!this.sfxOk()) return; const t = this.now();
     [523.25, 659.25, 783.99, 1046.5].forEach((f,i)=> this.note(f, t + i*.07, .22, {type:'triangle', gain:.2}));
     this.note(2093, t + .28, .3, {gain:.07});
   },
   /* a soft, warm "hmm" — never a sad trombone */
-  oops(){ if(!this.ensure()) return; const t = this.now();
+  oops(){ if(!this.sfxOk()) return; const t = this.now();
     this.note(392, t, .16, {gain:.13}); this.note(329.63, t + .14, .22, {gain:.11});
   },
-  ding(){ if(!this.ensure()) return; const t = this.now();
+  ding(){ if(!this.sfxOk()) return; const t = this.now();
     this.note(1318.5, t, .4, {gain:.15}); this.note(2637, t, .25, {gain:.05});
   },
-  sparkle(){ if(!this.ensure()) return; const t = this.now();
+  sparkle(){ if(!this.sfxOk()) return; const t = this.now();
     for(let i=0;i<6;i++) this.note(1400 + Math.random()*1500, t + i*.05, .15, {gain:.06});
   },
-  fanfare(){ if(!this.ensure()) return; const t = this.now();
+  fanfare(){ if(!this.sfxOk()) return; const t = this.now();
     [[523.25,0],[659.25,.12],[783.99,.24],[1046.5,.38]].forEach(p => this.note(p[0], t + p[1], .25, {type:'triangle', gain:.2}));
     [523.25, 659.25, 783.99, 1046.5].forEach(f => this.note(f, t + .6, .8, {type:'triangle', gain:.1}));
     this.sparkle();
   },
   startMusic(){
-    if(this.musicTimer || !this.ensure()) return;
+    if(this.musicTimer || this.musicMuted || !this.ensure()) return;
     const stepDur = .30;                       // ~100 bpm eighth notes, lullaby pace
     const mel = [                              // two alternating 16-step phrases
       [523,0,659,784, 880,784,659,0, 587,0,659,523, 440,0,0,0],
@@ -714,12 +755,17 @@ const AudioKit = {
     if(!this.ctx) return;
     const g = this.musicGain.gain;
     g.cancelScheduledValues(this.ctx.currentTime);
-    g.setTargetAtTime(on ? .035 : .14, this.ctx.currentTime, .15);
+    g.setTargetAtTime(this.musicMuted ? 0.0001 : (on ? .035 : .14), this.ctx.currentTime, .15);
   },
-  setMuted(m){
-    this.muted = m;
-    if(this.ctx) this.master.gain.value = m ? 0 : 1;
-    if(!m) this.startMusic();
+  toggleMusic(){
+    this.musicMuted = !this.musicMuted;
+    if(!this.musicMuted){ this.ensure(); this.startMusic(); }
+    if(this.ctx) this.musicGain.gain.setTargetAtTime(this.musicMuted ? 0.0001 : .14, this.ctx.currentTime, .05);
+  },
+  toggleSfx(){
+    this.sfxMuted = !this.sfxMuted;
+    Speech.muted = this.sfxMuted;     // Pip's voice rides with the sounds toggle
+    if(this.sfxMuted && Speech.ok){ try{ speechSynthesis.cancel(); }catch(e){} }
   }
 };
 
@@ -737,7 +783,7 @@ bug: sv('<ellipse cx="50" cy="58" rx="21" ry="17" fill="#E64A4A"/><path d="M50,4
 hat: sv('<path d="M28,60 Q30,32 50,32 Q70,32 72,60 Z" fill="#E64A4A"/><rect x="18" y="58" width="64" height="9" rx="4.5" fill="#B33030"/><circle cx="50" cy="30" r="5" fill="#FFC94D"/><rect x="28" y="50" width="44" height="7" fill="#FFC94D"/>'),
 pig: sv('<circle cx="50" cy="55" r="25" fill="#F8A8C0"/><polygon points="31,38 28,24 42,32" fill="#F286A8"/><polygon points="69,38 72,24 58,32" fill="#F286A8"/><ellipse cx="50" cy="61" rx="11" ry="8" fill="#F286A8"/><circle cx="46" cy="61" r="2" fill="#B3537A"/><circle cx="54" cy="61" r="2" fill="#B3537A"/><circle cx="40" cy="49" r="3" fill="#46302A"/><circle cx="60" cy="49" r="3" fill="#46302A"/>'),
 cup: sv('<path d="M32,40 h32 v22 q0,10 -16,10 q-16,0 -16,-10 z" fill="#62B6D9"/><path d="M64,45 q14,4 0,16" stroke="#3E8FB3" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M40,32 q2,-5 0,-9 M50,32 q2,-5 0,-9" stroke="#B0A695" stroke-width="2.4" fill="none" stroke-linecap="round"/><rect x="32" y="40" width="32" height="6" fill="#3E8FB3"/>'),
-fox: sv('<circle cx="50" cy="56" r="24" fill="#EE8A3C"/><polygon points="30,44 25,18 46,34" fill="#EE8A3C"/><polygon points="70,44 75,18 54,34" fill="#EE8A3C"/><polygon points="32,39 29,24 41,33" fill="#FFF6E8"/><polygon points="68,39 71,24 59,33" fill="#FFF6E8"/><ellipse cx="42" cy="64" rx="11" ry="9" fill="#FFF6E8"/><ellipse cx="58" cy="64" rx="11" ry="9" fill="#FFF6E8"/><circle cx="41" cy="52" r="3.2" fill="#46302A"/><circle cx="59" cy="52" r="3.2" fill="#46302A"/><ellipse cx="50" cy="62" rx="4.5" ry="3.6" fill="#46302A"/>'),
+fox: sv('<path d="M33,44 Q27,19 38,16 Q47,15 51,36 Z" fill="#EE8A3C"/><path d="M67,44 Q73,19 62,16 Q53,15 49,36 Z" fill="#EE8A3C"/><path d="M37,38 Q33,25 39,23 Q44,23 47,34 Z" fill="#F8C9A0"/><path d="M63,38 Q67,25 61,23 Q56,23 53,34 Z" fill="#F8C9A0"/><circle cx="50" cy="57" r="25" fill="#EE8A3C"/><path d="M50,56 C41,56 35,62 35,68 C35,75 42,78 50,78 C58,78 65,75 65,68 C65,62 59,56 50,56 Z" fill="#FFF6E8"/><circle cx="41" cy="52" r="4.6" fill="#3A2520"/><circle cx="42.8" cy="50.2" r="1.7" fill="#FFF"/><circle cx="59" cy="52" r="4.6" fill="#3A2520"/><circle cx="60.8" cy="50.2" r="1.7" fill="#FFF"/><path d="M46,61 Q50,58 54,61 Q53,66 50,66 Q47,66 46,61 Z" fill="#3A2520"/><path d="M45,69 Q50,73 55,69" stroke="#3A2520" stroke-width="2" fill="none" stroke-linecap="round"/>'),
 box: sv('<rect x="26" y="44" width="48" height="32" rx="3" fill="#C68958"/><polygon points="26,44 38,32 86,32 74,44" fill="#D9A06B" transform="translate(-6,0)"/><rect x="47" y="44" width="6" height="32" fill="#EBD3B3"/><line x1="26" y1="54" x2="74" y2="54" stroke="#9C6644" stroke-width="2"/>'),
 bed: sv('<rect x="20" y="34" width="9" height="38" rx="4" fill="#8A5A3B"/><rect x="20" y="60" width="62" height="9" rx="3" fill="#8A5A3B"/><rect x="74" y="48" width="8" height="24" rx="4" fill="#8A5A3B"/><rect x="29" y="52" width="48" height="10" rx="4" fill="#FFF"/><rect x="44" y="50" width="34" height="12" rx="5" fill="#62B6D9"/><ellipse cx="37" cy="53" rx="8" ry="5" fill="#FFE9C7"/>'),
 hen: sv('<ellipse cx="52" cy="58" rx="21" ry="17" fill="#FBEEDB" stroke="#E5CFA3" stroke-width="2"/><circle cx="38" cy="44" r="10" fill="#FBEEDB" stroke="#E5CFA3" stroke-width="2"/><circle cx="38" cy="36" r="3.4" fill="#E64A4A"/><circle cx="43" cy="34" r="3" fill="#E64A4A"/><polygon points="27,44 19,47 27,50" fill="#F2A100"/><circle cx="36" cy="43" r="2.4" fill="#46302A"/><path d="M48,55 q10,4 12,12" stroke="#E5CFA3" stroke-width="2.4" fill="none"/><path d="M46,75 v6 M58,75 v6" stroke="#F2A100" stroke-width="2.6" stroke-linecap="round"/>'),
@@ -1068,7 +1114,7 @@ function makeRound(li){
   const types = [];
   while(types.length < ROUND_LEN) types.push(...shuffle(L.types));
   const queue = types.slice(0, ROUND_LEN).map(t => GENERATORS[t](L, sk, used));
-  state.round = { queue, qi:0, total:ROUND_LEN, firstTry:0, missedHere:false, solved:false };
+  state.round = { queue, qi:0, total:ROUND_LEN, firstTry:0, missedHere:false, solved:false, startedMastered: sk.mastered };
 }
 
 /* =========================================================================
@@ -1129,23 +1175,31 @@ function foxSVG(){
   +   '<ellipse cx="88" cy="214" rx="13" ry="8" fill="#D96F1E"/>'
   +   '<ellipse cx="132" cy="214" rx="13" ry="8" fill="#D96F1E"/>'
   +   '<g class="fx-head">'
-  +     '<polygon points="56,72 66,16 96,52" fill="#EE8A3C"/>'
-  +     '<polygon points="164,72 154,16 124,52" fill="#EE8A3C"/>'
-  +     '<polygon points="62,62 68,28 86,50" fill="#FBD3A4"/>'
-  +     '<polygon points="158,62 152,28 134,50" fill="#FBD3A4"/>'
-  +     '<circle cx="110" cy="90" r="46" fill="#EE8A3C"/>'
-  +     '<ellipse cx="92" cy="112" rx="21" ry="17" fill="#FFF6E8"/>'
-  +     '<ellipse cx="128" cy="112" rx="21" ry="17" fill="#FFF6E8"/>'
-  +     '<ellipse cx="78" cy="99" rx="7" ry="4.4" fill="#F4A0A0" opacity=".65"/>'
-  +     '<ellipse cx="142" cy="99" rx="7" ry="4.4" fill="#F4A0A0" opacity=".65"/>'
+  /* ears drawn first with their bases tucked UNDER the head shape,
+     so they visibly grow out of it (no floating ears!) */
+  +     '<path d="M70,84 Q57,26 77,19 Q94,15 106,56 Z" fill="#EE8A3C"/>'
+  +     '<path d="M150,84 Q163,26 143,19 Q126,15 114,56 Z" fill="#EE8A3C"/>'
+  +     '<path d="M78,68 Q70,34 80,29 Q90,28 98,54 Z" fill="#F8C9A0"/>'
+  +     '<path d="M142,68 Q150,34 140,29 Q130,28 122,54 Z" fill="#F8C9A0"/>'
+  /* soft rounded head with chubby cheeks */
+  +     '<path d="M110,44 C76,44 58,68 58,94 C58,105 63,115 73,121 C83,128 96,131 110,131 C124,131 137,128 147,121 C157,115 162,105 162,94 C162,68 144,44 110,44 Z" fill="#EE8A3C"/>'
+  /* foxy cheek-fluff tufts */
+  +     '<path d="M63,93 L44,98 L61,104 L46,111 L65,112 Z" fill="#EE8A3C"/>'
+  +     '<path d="M157,93 L176,98 L159,104 L174,111 L155,112 Z" fill="#EE8A3C"/>'
+  /* white muzzle */
+  +     '<path d="M110,86 C92,86 80,98 80,111 C80,125 94,131 110,131 C126,131 140,125 140,111 C140,98 128,86 110,86 Z" fill="#FFF6E8"/>'
+  /* big shiny eyes */
   +     '<g class="fx-eyes">'
-  +       '<circle cx="92" cy="84" r="6.5" fill="#3A2520"/><circle cx="94.5" cy="81.5" r="2.2" fill="#FFF"/>'
-  +       '<circle cx="128" cy="84" r="6.5" fill="#3A2520"/><circle cx="130.5" cy="81.5" r="2.2" fill="#FFF"/>'
+  +       '<circle cx="87" cy="88" r="9" fill="#3A2520"/><circle cx="90.5" cy="84.5" r="3.2" fill="#FFF"/><circle cx="84" cy="91.5" r="1.6" fill="#FFF" opacity=".8"/>'
+  +       '<circle cx="133" cy="88" r="9" fill="#3A2520"/><circle cx="136.5" cy="84.5" r="3.2" fill="#FFF"/><circle cx="130" cy="91.5" r="1.6" fill="#FFF" opacity=".8"/>'
   +     '</g>'
-  +     '<ellipse cx="110" cy="103" rx="7.5" ry="5.5" fill="#3A2520"/>'
-  +     '<path class="fx-mouth-happy" d="M99,114 Q110,123 121,114" stroke="#3A2520" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
-  +     '<ellipse class="fx-mouth-o" cx="110" cy="119" rx="7" ry="9" fill="#3A2520"/>'
-  +     '<path class="fx-mouth-hm" d="M101,118 Q106,114 111,118 Q116,122 121,118" stroke="#3A2520" stroke-width="3.2" fill="none" stroke-linecap="round"/>'
+  +     '<ellipse cx="71" cy="103" rx="8" ry="5" fill="#F4A0A0" opacity=".7"/>'
+  +     '<ellipse cx="149" cy="103" rx="8" ry="5" fill="#F4A0A0" opacity=".7"/>'
+  /* button nose + interchangeable mouths (happy / "yay!" / thoughtful) */
+  +     '<path d="M102,103 Q110,98 118,103 Q116,112 110,112 Q104,112 102,103 Z" fill="#3A2520"/>'
+  +     '<path class="fx-mouth-happy" d="M100,118 Q110,127 120,118" stroke="#3A2520" stroke-width="3.4" fill="none" stroke-linecap="round"/>'
+  +     '<ellipse class="fx-mouth-o" cx="110" cy="121" rx="6.5" ry="8" fill="#3A2520"/>'
+  +     '<path class="fx-mouth-hm" d="M101,120 Q106,116 111,120 Q116,124 121,120" stroke="#3A2520" stroke-width="3.2" fill="none" stroke-linecap="round"/>'
   +   '</g>'
   + '</g></svg>';
 }
@@ -1155,6 +1209,63 @@ function setFoxMood(el, mood){
   fox.classList.remove('cheer','shrug','party');
   if(mood){ void fox.getBoundingClientRect(); fox.classList.add(mood); }
 }
+
+/* =========================================================================
+   BADGES — one collectible medallion per level (kids love collecting!).
+   Earned by finishing a level's round; mastery (90+) turns the badge GOLD.
+   Derived from skill state, so no extra bookkeeping can drift out of sync.
+   ========================================================================= */
+const BADGES = ['Meadow Bloom','Whisper Owl','Berry Bridge','Seaside Sun','Starlight Star'];
+function badgeEmblem(i){
+  switch(i){
+    case 0: /* flower */ return '<g>'+[0,60,120,180,240,300].map(a=>'<ellipse cx="60" cy="45" rx="8.5" ry="12" fill="#EA6E96" transform="rotate('+a+' 60 60)"/>').join('')+'<circle cx="60" cy="60" r="9" fill="#FFC94D" stroke="#E8A800" stroke-width="1.6"/></g>';
+    case 1: /* owl */ return '<g><ellipse cx="60" cy="64" rx="20" ry="21" fill="#A8714A"/><polygon points="45,47 48,35 55,46" fill="#A8714A"/><polygon points="75,47 72,35 65,46" fill="#A8714A"/><circle cx="52" cy="58" r="8" fill="#FFF"/><circle cx="68" cy="58" r="8" fill="#FFF"/><circle cx="53" cy="58" r="3.6" fill="#3A2520"/><circle cx="67" cy="58" r="3.6" fill="#3A2520"/><polygon points="56,66 64,66 60,73" fill="#F2A100"/><path d="M47,76 Q60,84 73,76" stroke="#8A5A3B" stroke-width="2.6" fill="none" stroke-linecap="round"/></g>';
+    case 2: /* berries */ return '<g><circle cx="51" cy="66" r="10" fill="#C2407B"/><circle cx="69" cy="66" r="10" fill="#E64A4A"/><circle cx="60" cy="52" r="10" fill="#EA6E96"/><ellipse cx="69" cy="39" rx="8" ry="4.5" fill="#4D9B68" transform="rotate(-22 69 39)"/><path d="M60,52 Q62,42 68,38" stroke="#2F7249" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>';
+    case 3: /* sun */ return '<g><circle cx="60" cy="60" r="14" fill="#FFC94D" stroke="#E8A800" stroke-width="2"/><g stroke="#FFB300" stroke-width="3.4" stroke-linecap="round"><path d="M60,39 v-7 M60,81 v7 M39,60 h-7 M81,60 h7 M45,45 l-5,-5 M75,45 l5,-5 M45,75 l-5,5 M75,75 l5,5"/></g><circle cx="55.5" cy="58" r="1.8" fill="#B97900"/><circle cx="64.5" cy="58" r="1.8" fill="#B97900"/><path d="M55,64 Q60,68 65,64" stroke="#B97900" stroke-width="2" fill="none" stroke-linecap="round"/></g>';
+    default: /* star */ return '<g><polygon points="60,33 67,51 86,52 71,64 76,83 60,72 44,83 49,64 34,52 53,51" fill="#FFC94D" stroke="#E8A800" stroke-width="2" stroke-linejoin="round"/><circle cx="55" cy="57" r="1.8" fill="#B97900"/><circle cx="65" cy="57" r="1.8" fill="#B97900"/><path d="M55,63 Q60,67 65,63" stroke="#B97900" stroke-width="2" fill="none" stroke-linecap="round"/></g>';
+  }
+}
+function badgeSVG(i, status){   // status: 'locked' | 'earned' | 'gold'
+  const locked = status === 'locked';
+  const ring   = locked ? '#C9C0B0' : status === 'gold' ? '#FFC94D' : LEVELS[i].color;
+  const edge   = locked ? '#B6AC9B' : status === 'gold' ? '#E8A800' : 'rgba(0,0,0,.16)';
+  let s = '<svg class="badge" viewBox="0 0 120 150" aria-hidden="true">';
+  s += '<polygon points="42,96 30,138 50,124 60,142 60,100" fill="'+(locked ? '#B6AC9B' : '#E64A4A')+'"/>';
+  s += '<polygon points="78,96 90,138 70,124 60,142 60,100" fill="'+(locked ? '#A89E8D' : '#B33030')+'"/>';
+  for(let k=0;k<12;k++){
+    const a = k*Math.PI/6;
+    s += '<circle cx="'+(60+46*Math.cos(a)).toFixed(1)+'" cy="'+(60+46*Math.sin(a)).toFixed(1)+'" r="9" fill="'+ring+'"/>';
+  }
+  s += '<circle cx="60" cy="60" r="46" fill="'+ring+'" stroke="'+edge+'" stroke-width="2"/>';
+  s += '<circle cx="60" cy="60" r="36" fill="'+(locked ? '#DDD6C8' : '#FFF8EA')+'"/>';
+  if(locked){
+    s += '<text x="60" y="75" font-family="Fredoka,Arial,sans-serif" font-size="42" font-weight="700" fill="#B6AC9B" text-anchor="middle">?</text>';
+  } else {
+    s += badgeEmblem(i);
+    if(status === 'gold'){
+      s += '<polygon points="60,2 63,11 72,11 65,17 67,26 60,21 53,26 55,17 48,11 57,11" fill="#FFC94D" stroke="#E8A800" stroke-width="1.4" stroke-linejoin="round"/>';
+      s += '<circle cx="20" cy="28" r="3" fill="#FFF" opacity=".9"/><circle cx="100" cy="34" r="2.4" fill="#FFF" opacity=".9"/>';
+    }
+  }
+  return s + '</svg>';
+}
+function badgeStatus(i){
+  const sk = state.skills[i];
+  return sk.mastered ? 'gold' : sk.completed ? 'earned' : 'locked';
+}
+function renderBadges(){
+  const earned = state.skills.filter(sk => sk.completed).length;
+  $('#badge-count').textContent = earned + ' of ' + LEVELS.length + ' badges collected'
+    + (earned === LEVELS.length ? ' — amazing!' : '. Finish a level to earn its badge — master it (90+) to turn it gold!');
+  $('#badge-grid').innerHTML = LEVELS.map((L,i)=>{
+    const st = badgeStatus(i);
+    return '<div class="badge-cell '+st+'">'+badgeSVG(i,st)
+      + '<span class="b-name">'+BADGES[i]+'</span>'
+      + '<span class="b-state">'+(st==='gold' ? '★ Gold!' : st==='earned' ? 'Earned!' : L.name)+'</span></div>';
+  }).join('');
+}
+function openBadges(){ renderBadges(); $('#badgecase').classList.add('open'); }
+function closeBadges(){ $('#badgecase').classList.remove('open'); }
 
 /* =========================================================================
    RENDERING
@@ -1402,6 +1513,19 @@ function finishRound(){
   $('#party-sub').innerHTML = 'You got <b>' + r.firstTry + ' of ' + r.total + '</b> on the first try in ' + L.name + '.<br>Your score is <b>' + sk.score + '</b>' + (sk.mastered ? '' : ' — reach 90 for a star!');
   $('#mastery-banner').classList.toggle('show', sk.mastered);
 
+  /* badge prize moment: a new badge on first completion, gold on mastery */
+  const newGold  = sk.mastered && !r.startedMastered;
+  const newBadge = wasNewlyCompleted;
+  const pb = $('#party-badge'), pc = $('#badge-caption');
+  pb.classList.remove('show'); pc.classList.remove('show');
+  if(newBadge || newGold){
+    pb.innerHTML = badgeSVG(state.levelIndex, badgeStatus(state.levelIndex));
+    pc.textContent = newGold
+      ? 'Your ' + BADGES[state.levelIndex] + ' badge turned GOLD!'
+      : 'New badge: ' + BADGES[state.levelIndex] + '!';
+    setTimeout(()=>{ pb.classList.add('show'); pc.classList.add('show'); AudioKit.sparkle(); confettiBurstAt(pb); }, 900);
+  } else { pb.innerHTML = ''; pc.textContent = ''; }
+
   showScreen('screen-party');
   setFoxMood($('#screen-party'), 'party');
   confettiRain(sk.mastered ? 80 : 45);
@@ -1418,6 +1542,8 @@ function finishRound(){
   let line = sk.mastered
     ? 'Magnificent! You mastered ' + L.skill + '! The forest is blooming!'
     : 'You finished ' + L.name + ' with ' + r.firstTry + ' first-try stars! ' + (wasNewlyCompleted && state.levelIndex+1 < LEVELS.length ? 'A new stepping stone just opened!' : 'Practice again to make your score climb!');
+  if(newGold) line += ' Wow — your ' + BADGES[state.levelIndex] + ' badge turned gold!';
+  else if(newBadge) line += ' You earned the ' + BADGES[state.levelIndex] + ' badge! It’s in your badge case!';
   Speech.say(line);
 }
 
@@ -1480,10 +1606,16 @@ function confettiBurstAt(el){
 /* =========================================================================
    WIRING
    ========================================================================= */
-function updateMuteIcon(){
-  $('#btn-mute').innerHTML = Speech.muted
-    ? '<svg viewBox="0 0 24 24" fill="#B0A695"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16 9l5 6M21 9l-5 6" stroke="#B0A695" stroke-width="2.2" stroke-linecap="round"/></svg>'
-    : '<svg viewBox="0 0 24 24" fill="#EE8A3C"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16 8.8a4.5 4.5 0 010 6.4M18.6 6a8 8 0 010 12" stroke="#EE8A3C" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+function updateAudioIcons(){
+  const slash = '<path d="M4.5 20.5 L20.5 3.5" stroke="#E64A4A" stroke-width="2.6" stroke-linecap="round"/>';
+  const mc = AudioKit.musicMuted ? '#B0A695' : '#EE8A3C';
+  $('#btn-music').innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none"><path d="M9 17V4l10-2v13" stroke="'+mc+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3" fill="'+mc+'"/><circle cx="16.5" cy="15.5" r="3" fill="'+mc+'"/>'
+    + (AudioKit.musicMuted ? slash : '') + '</svg>';
+  const sc = AudioKit.sfxMuted ? '#B0A695' : '#EE8A3C';
+  $('#btn-sfx').innerHTML =
+    '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="'+sc+'"/><path d="M16 8.8a4.5 4.5 0 010 6.4M18.6 6a8 8 0 010 12" stroke="'+sc+'" stroke-width="2" fill="none" stroke-linecap="round"/>'
+    + (AudioKit.sfxMuted ? slash : '') + '</svg>';
 }
 
 /* the logo letters bob one after another, like a song */
@@ -1515,7 +1647,7 @@ function init(){
   $('#map-fox').innerHTML = foxSVG();
   $('#quest-fox').innerHTML = foxSVG();
   $('#party-fox').innerHTML = foxSVG();
-  updateMuteIcon();
+  updateAudioIcons();
   if(!Speech.ok) $('#speech-note').textContent = '🔇 No voice on this device — follow the pictures and letters!';
 
   // every button tap gets a soft "boop" (sound effects need no permission,
@@ -1539,19 +1671,18 @@ function init(){
     const r = state.round;
     if(r && r.queue[r.qi]) Speech.say(r.queue[r.qi].say);
   });
-  $('#btn-mute').addEventListener('click', () => {
-    Speech.muted = !Speech.muted;
-    AudioKit.setMuted(Speech.muted);      // one button silences voice, music & sfx
-    if(Speech.muted && Speech.ok){ try{ speechSynthesis.cancel(); }catch(e){} }
-    updateMuteIcon();
-  });
+  $('#btn-music').addEventListener('click', () => { AudioKit.toggleMusic(); updateAudioIcons(); });
+  $('#btn-sfx').addEventListener('click', () => { AudioKit.toggleSfx(); updateAudioIcons(); });
+  $('#btn-badges').addEventListener('click', openBadges);
+  $('#btn-badges-close').addEventListener('click', closeBadges);
+  $('#badgecase').addEventListener('click', e => { if(e.target.id === 'badgecase') closeBadges(); });
   $('#btn-dash').addEventListener('click', openDash);
   $('#btn-dash2').addEventListener('click', openDash);
   $('#btn-dash-close').addEventListener('click', closeDash);
   $('#dash').addEventListener('click', e => { if(e.target.id === 'dash') closeDash(); });
   $('#btn-again').addEventListener('click', () => startLevel(state.levelIndex));
   $('#btn-map').addEventListener('click', () => { renderMap(); showScreen('screen-map'); });
-  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeDash(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeDash(); closeBadges(); } });
 }
 init();
 </script>
